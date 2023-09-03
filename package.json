@@ -1,0 +1,19 @@
+{
+  "name": "polygon-parts-cli",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node ./src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "config": "^3.3.9",
+    "csv": "^6.3.3",
+    "pg": "^8.11.3",
+    "wellknown": "^0.5.0",
+    "yargs": "^17.7.2"
+  }
+}
