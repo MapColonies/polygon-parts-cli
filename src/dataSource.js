@@ -14,7 +14,7 @@ const MAP_TO_DB = {
   producttype: "productType",
   srsname: "srsName",
   description: "description",
-  imageName: "imageName",
+  imagename: "imageName",
   minhorizontalaccuracyce90: "minHorizontalAccuracyCe90",
   maxresolutionmeter: "maxResolutionMeter",
   sensors: "sensors",
@@ -23,6 +23,15 @@ const MAP_TO_DB = {
   maxresolutiondeg: "maxResolutionDegree",
   wkt: "WKT",
 };
+
+// each value is the original column name on "parts" table.
+const CLASSIFICATION_MAPPING = {
+  unclassified: 6,
+  confidential: 5,
+  secret: 4,
+  topsecret: 3,
+};
+
 class FileToDB {
   constructor(input) {
     this.columnMappedKeys = {};
@@ -32,6 +41,7 @@ class FileToDB {
   }
 
   csvToPg = async () => {
+    let linesCounter = 0;
     this.dbClient = new DBProvider();
     await this.constructHeaders(); // load actual column header name and map it by indexes
     return new Promise((resolve, reject) => {
@@ -39,13 +49,20 @@ class FileToDB {
         .pipe(parse({ delimiter: ",", from_line: 2 }))
         .on("error", reject)
         .on("data", async (row) => {
-            const polygons = this.multiPolygon2Polygons(row[this.columnMappedKeys['wkt']])
-            for (const polygon of polygons){
+          linesCounter+=1;
+          if (row[this.columnMappedKeys['classification']] && CLASSIFICATION_MAPPING[row[this.columnMappedKeys['classification']].toLowerCase()]){
+          const polygons = this.multiPolygon2Polygons(row[this.columnMappedKeys['wkt']])
+          let polygonCounter = 0;
+          for (const polygon of polygons){
+              polygonCounter+=1;
+              console.log(`Processing line number ${linesCounter} -- polygon ${polygonCounter}/${polygons.length}`)
                 const polygonParts = {
                     recordId: row[this.columnMappedKeys['recordid']] ? row[this.columnMappedKeys['recordid']]: 'unknown',
                     productId: row[this.columnMappedKeys['productid']] ? row[this.columnMappedKeys['productid']]: 'unknown',
                     productName: row[this.columnMappedKeys['productname']] ? row[this.columnMappedKeys['productname']]: 'unknown',
                     productVersion: "1.0",
+                    productType: row[this.columnMappedKeys['producttype']] ? row[this.columnMappedKeys['producttype']]: 'orthophotoBest',
+                    imageName: row[this.columnMappedKeys['imagename']] ? row[this.columnMappedKeys['imagename']]: undefined,
                     sourceStartDateUtc: row[this.columnMappedKeys['sourcedateend']].replaceAll('/','-'),
                     sourceEndDateUtc: row[this.columnMappedKeys['sourcedateend']].replaceAll('/','-'),
                     minResolutionDegree: parseFloat(row[this.columnMappedKeys['maxresolutiondeg']]),
@@ -54,13 +71,17 @@ class FileToDB {
                     maxResolutionMeter: parseFloat(row[this.columnMappedKeys['maxresolutionmeter']]),
                     minHorizontalAccuracyCe90: parseFloat(row[this.columnMappedKeys['minhorizontalaccuracyce90']]),
                     sensors: row[this.columnMappedKeys['sensors']],
-                    region: row[this.columnMappedKeys['region']] ? row[this.columnMappedKeys['region']]: '1,2,3',
-                    classification: 5,
+                    region: row[this.columnMappedKeys['region']] ? row[this.columnMappedKeys['region']]: 'unknown',
+                    classification: CLASSIFICATION_MAPPING[row[this.columnMappedKeys['classification']].toLowerCase()],
                     description: row[this.columnMappedKeys['description']] ? row[this.columnMappedKeys['description']]: '',
                     geom: polygon,
                 }
                 await this.dbClient.insertPolygonPart(polygonParts);
             }
+          }
+          else {
+            console.error(`No classification provided for line ${linesCounter}, will skip this line`)
+          }
         })
         .on("end", () => {
           resolve();

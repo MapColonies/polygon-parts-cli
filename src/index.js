@@ -25,11 +25,11 @@ const partsUploader = new FileToDB(input);
 (async () =>{
   try {
     await partsUploader.csvToPg()
+    console.log('Complete migration successfully')
   } catch (error) {
       console.log("err", error)
+      console.log('Failed complete migration')
   } finally {
+    console.log('Migration stop running')
   }
-})().finally (
-  console.log("DONE")
-)
-
+})()

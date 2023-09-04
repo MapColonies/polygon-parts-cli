@@ -35,10 +35,9 @@ class DBProvider {
     const pgClient = await this.connectToDb();
     try {
       const params =
-        '"recordId", "productId", "productName", "productVersion", "sourceStartDateUtc", "sourceEndDateUtc", "minResolutionDegree", "maxResolutionDegree", "minResolutionMeter", "maxResolutionMeter", "minHorizontalAccuracyCe90", sensors, region, classification, description, geom';
-      const values = `'${part["recordId"]}','${part["productId"]}','${part["productName"]}','${part["productVersion"]}',to_date('${part["sourceStartDateUtc"]}','DD-MM-YYYY HH24:MI:SS'),to_date('${part["sourceEndDateUtc"]}','DD-MM-YYYY HH24:MI:SS'),${part["minResolutionDegree"]},${part["maxResolutionDegree"]},${part["minResolutionMeter"]},${part["maxResolutionMeter"]},${part["minHorizontalAccuracyCe90"]},'${part["sensors"]}','${part["region"]}',${part["classification"]},'${part["description"]}',ST_GeomFromGeoJSON('${JSON.stringify(part["geom"])}')`;
+        '"recordId", "productId", "productName", "productVersion", "sourceStartDateUtc", "sourceEndDateUtc", "minResolutionDegree", "maxResolutionDegree", "minResolutionMeter", "maxResolutionMeter", "minHorizontalAccuracyCe90", sensors, region, classification, description, geom, "imageName", "productType"';
+      const values = `'${part["recordId"]}','${part["productId"]}','${part["productName"]}','${part["productVersion"]}',to_date('${part["sourceStartDateUtc"]}','DD-MM-YYYY HH24:MI:SS'),to_date('${part["sourceEndDateUtc"]}','DD-MM-YYYY HH24:MI:SS'),${part["minResolutionDegree"]},${part["maxResolutionDegree"]},${part["minResolutionMeter"]},${part["maxResolutionMeter"]},${part["minHorizontalAccuracyCe90"]},'${part["sensors"]}','${part["region"]}',${part["classification"]},'${part["description"]}',ST_GeomFromGeoJSON('${JSON.stringify(part["geom"])}'),'${part["imageName"]}','${part["productType"]}'`;
       const query = `INSERT INTO ${this.dbConfig.table}(${params}) VALUES (${values})`;
-      console.log(query);
       await pgClient.query(query);
       
     } catch (e) {
