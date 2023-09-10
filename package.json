@@ -1,7 +1,7 @@
 {
   "name": "polygon-parts-cli",
   "version": "1.0.0",
-  "description": "",
+  "description": "This CLI utility will parse and upload csv parts data into wfs db (pg)",
   "main": "src/index.js",
   "scripts": {
     "start": "node ./src/index.js",
