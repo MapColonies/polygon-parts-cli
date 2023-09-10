@@ -33,8 +33,6 @@ const CLASSIFICATION_MAPPING = {
 
 const PRODUCT_TYPE_MAPPING = {
   orthophoto: "Orthophoto",
-  orthphoto: "Orthophoto",
-  orthophto: "Orthophoto",
   orthophotohistory: "OrthophotoHistory",
   orthophotobest: "OrthophotoBest",
   rastermap: "RasterMap",
