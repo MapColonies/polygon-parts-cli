@@ -1,0 +1,18 @@
+{
+    "pgConfig":{
+        "host": "localhost",
+        "port": 5432,
+        "database": "raster-dev",
+        "user": "postgres",
+        "password": "postgres",
+        "scheme": "PoylgonParts",
+        "table": "parts",
+        "sslEnabled": false,
+        "rejectUnauthorized": false,
+        "sslPaths": {
+          "ca": "",
+          "key": "",
+          "cert": ""
+        }
+    }
+}
