@@ -247,7 +247,7 @@ class FileToDB {
 
   multiPolygon2Polygons = (wkt) => {
     const geoJson = geoParse(wkt);
-    if (geoJson["type"] === "Polygon") return geoJson;
+    if (geoJson["type"] === "Polygon") return [geoJson];
 
     const polygonsArray = geoJson["coordinates"].map((polygonCoordinates) => {
       return { type: "Polygon", coordinates: polygonCoordinates };
