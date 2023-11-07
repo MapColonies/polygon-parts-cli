@@ -56,6 +56,7 @@ export class FileToDB {
           }
         }
         dbClient.release();
+        await this.dbProvider.end();
         resolve({
           linesProcessed: linesCounter,
           linesSkipped: linesSkippedCounter,
@@ -65,6 +66,7 @@ export class FileToDB {
         const errMessage = getErrorMessage(err);
         console.error(`Failed to process the CSV file with an error: ${errMessage}`);
         dbClient.release(true);
+        await this.dbProvider.end();
         reject(err);
       };
     });

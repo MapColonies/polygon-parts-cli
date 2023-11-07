@@ -49,7 +49,7 @@ export class DBProvider {
     return pgClient;
   }
 
-  public async release() {
+  public async end() {
     this.pool.end();
   }
 
