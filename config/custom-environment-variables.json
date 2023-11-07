@@ -1,0 +1,37 @@
+{
+    "pgConfig": {
+        "host": "DB_HOST",
+        "port": {
+            "__name": "DB_PORT",
+            "__format": "number"
+        },
+        "database": "DB_DATABASE",
+        "user": "DB_USER",
+        "password": "DB_PASSWORD",
+        "schema": "DB_SCHEMA",
+        "table": "DB_TABLE",
+        "sslEnabled": {
+            "__name": "DB_SSL_ENABLED",
+            "__format": "boolean"
+        },
+        "rejectUnauthorized": {
+            "__name": "DB_REJECT_UNAUTHORIZED",
+            "__format": "boolean"
+        },
+        "sslPaths": {
+            "ca": "DB_SSL_CA",
+            "key": "DB_SSL_KEY",
+            "cert": "DB_SSL_CERT"
+        },
+        "pool": {
+            "min": {
+                "__name": "DB_POOL_MIN",
+                "__format": "number"
+            },
+            "max": {
+                "__name": "DB_POOL_MAX",
+                "__format": "number"
+            }
+        }
+    }
+}
