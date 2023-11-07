@@ -1,18 +1,22 @@
 {
-    "pgConfig":{
-        "host": "localhost",
-        "port": 5432,
-        "database": "raster-dev",
-        "user": "postgres",
-        "password": "postgres",
-        "scheme": "PoylgonParts",
-        "table": "parts",
-        "sslEnabled": false,
-        "rejectUnauthorized": false,
-        "sslPaths": {
-          "ca": "",
-          "key": "",
-          "cert": ""
-        }
+  "pgConfig": {
+    "host": "localhost",
+    "port": 5432,
+    "database": "raster-dev",
+    "user": "postgres",
+    "password": "postgres",
+    "schema": "PolygonParts",
+    "table": "parts",
+    "sslEnabled": false,
+    "rejectUnauthorized": false,
+    "sslPaths": {
+      "ca": "",
+      "key": "",
+      "cert": ""
+    },
+    "pool": {
+      "min": 0,
+      "max": 10
     }
+  }
 }
