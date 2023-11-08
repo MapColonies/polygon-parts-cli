@@ -20,9 +20,9 @@ export class DBProvider {
     if (this.dbConfig.sslEnabled) {
       pgClientConfig.ssl = {
         rejectUnauthorized: this.dbConfig.rejectUnauthorized,
+        ca: readFileSync(this.dbConfig.sslPaths.ca),
         key: readFileSync(this.dbConfig.sslPaths.key),
         cert: readFileSync(this.dbConfig.sslPaths.cert),
-        ca: readFileSync(this.dbConfig.sslPaths.ca),
       };
     }
 
@@ -43,10 +43,19 @@ export class DBProvider {
   public async connectToDb(): Promise<PoolClient> {
     const pgClient = await this.pool.connect();
     await pgClient.query(`SET search_path TO ${this.dbConfig.schema}, public;`);
+    await pgClient.query('BEGIN');
     pgClient.on('error', (err) => {
       console.error('DB client error', err);
     });
     return pgClient;
+  }
+
+  public commit(pgClient: PoolClient) {
+    pgClient.query('COMMIT');
+  }
+
+  public rollback(pgClient: PoolClient) {
+    pgClient.query('ROLLBACK');
   }
 
   public async end() {

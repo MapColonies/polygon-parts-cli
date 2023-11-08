@@ -4,7 +4,7 @@ import { GeoJSONPolygon, parse as geoParse } from 'wellknown';
 import { CLASSIFICATION_MAPPING, PRODUCT_TYPE_MAPPING, SUPPORTED_GEO_TYPES, allFields, requiredFields } from './constants';
 import { DBProvider } from './pg';
 import { DataSource, DataSourceRecord, ProcessingSummary } from './types';
-import { getErrorMessage, hasDefinedProps, isInArray, isPartOf } from './utilities';
+import { hasDefinedProps, isInArray, isPartOf } from './utilities';
 
 export class FileToDB {
   dbProvider: DBProvider;
@@ -15,35 +15,28 @@ export class FileToDB {
 
   public csvToPg = async (): Promise<ProcessingSummary> => {
     const dbClient = await this.dbProvider.connectToDb();
-    let linesCounter = 0, linesSkippedCounter = 0, totalPolygonCounter = 0;
+    let linesCounter = 0, totalPolygonCounter = 0;
 
     console.log('Processing file headers');
     const columnMappedKeys = await this.constructCsvHeaders(); // load actual column header name and map it by indexes
 
     console.log('Processing file content');
     return new Promise<ProcessingSummary>(async (resolve, reject) => {
-      const readStream = createReadStream(this.inputPath)
-        .pipe(parse({
-          delimiter: ',',
-          from_line: 2,
-        }));
-
       try {
+        const readStream = createReadStream(this.inputPath)
+          .pipe(parse({
+            delimiter: ',',
+            from_line: 2,
+          }));
+
         let row: string[];
         for await (row of readStream) {
           linesCounter += 1;
           let polygons: GeoJSONPolygon[];
 
-          try {
-            this.validateData(row, columnMappedKeys); // checking mandatory fields
-            // TODO: Add validation all mandatory fields exist
-            polygons = this.multiPolygonToPolygons(row[columnMappedKeys.geom]);
-          } catch (err) {
-            linesSkippedCounter += 1;
-            const errMessage = getErrorMessage(err);
-            console.error(`Skipping line ${linesCounter} -- ${errMessage}`);
-            continue;
-          }
+          this.validateData(row, columnMappedKeys); // checking mandatory fields
+          // TODO: Add validation all mandatory fields exist
+          polygons = this.multiPolygonToPolygons(row[columnMappedKeys.geom]);
 
           let polygonCounter = 0;
           for (const polygon of polygons) {
@@ -55,20 +48,18 @@ export class FileToDB {
             totalPolygonCounter += rowsInserted;
           }
         }
-        dbClient.release();
-        await this.dbProvider.end();
+        this.dbProvider.commit(dbClient);
         resolve({
           linesProcessed: linesCounter,
-          linesSkipped: linesSkippedCounter,
           polygonsProcessed: totalPolygonCounter
         });
       } catch (err) {
-        const errMessage = getErrorMessage(err);
-        console.error(`Failed to process the CSV file with an error: ${errMessage}`);
-        dbClient.release(true);
-        await this.dbProvider.end();
+        this.dbProvider.rollback(dbClient);
         reject(err);
-      };
+      } finally {
+        dbClient.release();
+        await this.dbProvider.end();
+      }
     });
   }
 
@@ -77,11 +68,11 @@ export class FileToDB {
     const productTypeKey = row[columnMappedKeys.productType].toLowerCase();
     const polygonRecord: Record<DataSource, string | number | GeoJSONPolygon | undefined> = {
       recordId: row[columnMappedKeys.recordId],
-      productId: row[columnMappedKeys.productId] ? row[columnMappedKeys.productId] : 'unknown',
-      productName: row[columnMappedKeys.productName] ? row[columnMappedKeys.productName] : 'unknown',
-      productVersion: '1.0',
+      productId: row[columnMappedKeys.productId] ?? 'unknown',
+      productName: row[columnMappedKeys.productName] ?? 'unknown',
+      productVersion: row[columnMappedKeys.productVersion],
       productType: isPartOf(productTypeKey, PRODUCT_TYPE_MAPPING) ? PRODUCT_TYPE_MAPPING[productTypeKey] : undefined,
-      imageName: row[columnMappedKeys.imageName] ? row[columnMappedKeys.imageName] : undefined,
+      imageName: row[columnMappedKeys.imageName],
       //TODO - start date taken from end
       sourceStartDateUtc: row[columnMappedKeys.sourceEndDateUtc],
       sourceEndDateUtc: row[columnMappedKeys.sourceEndDateUtc],
@@ -93,9 +84,9 @@ export class FileToDB {
       maxResolutionMeter: parseFloat(row[columnMappedKeys.maxResolutionMeter]),
       minHorizontalAccuracyCe90: parseFloat(row[columnMappedKeys.minHorizontalAccuracyCe90]),
       sensors: row[columnMappedKeys.sensors],
-      region: row[columnMappedKeys.region] ? row[columnMappedKeys.region] : 'unknown',
+      region: row[columnMappedKeys.region] ?? 'unknown',
       classification: isPartOf(classificationKey, CLASSIFICATION_MAPPING) ? CLASSIFICATION_MAPPING[classificationKey] : undefined,
-      description: row[columnMappedKeys.description] ? row[columnMappedKeys.description] : '',
+      description: row[columnMappedKeys.description] ?? '',
       geom: polygon,
       srsName: row[columnMappedKeys.srsName],
     };
@@ -131,14 +122,14 @@ export class FileToDB {
       !classificationKey ||
       !isPartOf(classificationKey.toLowerCase(), CLASSIFICATION_MAPPING)
     )
-      throw new Error(`Failed validation for current row - invalid classification. classification should be: ${Object.keys(CLASSIFICATION_MAPPING)}`);
+      throw new Error(`Failed validation for current row - invalid classification. classification should be one of: ${Object.keys(CLASSIFICATION_MAPPING)}`);
 
     const productTypeKey = row[columnMappedKeys.productType];
     if (
       !row[columnMappedKeys.productType] ||
       !isPartOf(productTypeKey.toLowerCase(), PRODUCT_TYPE_MAPPING)
     )
-      throw new Error(`Failed validation for current row - invalid product type. productType should be: ${Object.values(PRODUCT_TYPE_MAPPING)}`);
+      throw new Error(`Failed validation for current row - invalid product type. productType should be one of: ${Object.values(PRODUCT_TYPE_MAPPING)}`);
 
     if (!row[columnMappedKeys.recordId])
       throw new Error(this.formatError('recordId'));
@@ -148,9 +139,8 @@ export class FileToDB {
     } else {
       const wkt = row[columnMappedKeys.geom];
       const geoType = wkt.split(' ')[0];
-      if (!SUPPORTED_GEO_TYPES.includes(geoType)) {
-        throw new Error(`wkt should consist of Polygon or MultiPolygon geometry types, provided wkt: '${geoType}'`);
-      }
+      if (!SUPPORTED_GEO_TYPES.includes(geoType))
+        throw new Error(`geom field should consist of Polygon or MultiPolygon WKT geometry types, provided geom: '${geoType}'`);
     }
 
     if (!row[columnMappedKeys.sourceEndDateUtc])

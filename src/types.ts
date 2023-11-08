@@ -26,6 +26,5 @@ export type DataSourceRecord = Record<DataSource, number>;
 
 export type ProcessingSummary = {
     linesProcessed: number,
-    linesSkipped: number
     polygonsProcessed: number,
 };

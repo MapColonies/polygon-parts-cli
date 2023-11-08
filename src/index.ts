@@ -1,6 +1,7 @@
 import yargs, { showHelp } from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { FileToDB } from './dataSource';
+import { getErrorMessage } from './utilities';
 
 const argv = yargs(hideBin(process.argv))
   .usage('insert polygon part raw data into db')
@@ -28,13 +29,12 @@ if (!argv.i && !argv.input) {
       console.log('Processing finished');
       console.log(`Summary:
 Total lines processed: ${summary.linesProcessed}
-Lines processed successfully: ${summary.linesProcessed - summary.linesSkipped}
-Lines skipped: ${summary.linesSkipped}
-Polygons processed successfully: ${summary.polygonsProcessed}
+Polygons processed: ${summary.polygonsProcessed}
     `);
       exitCode = 0;
     } catch (err) {
-      console.error('Processing failed with an error:', err instanceof Error ? err.message : err);
+      const errMessage = getErrorMessage(err);
+      console.error(`Processing failed with an error: ${errMessage}`);
     } finally {
       process.exit(exitCode);
     }
