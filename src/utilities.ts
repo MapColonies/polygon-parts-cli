@@ -15,6 +15,6 @@ export const isInArray = <T extends string>(value: string, array: Readonly<Array
     return !!array.find(item => item === value);
 }
 
-export const hasDefinedProps = <T extends { [P in K]?: any }, K extends keyof T>(obj: T, ...keys: K[]): obj is Required<T> => {
+export const hasProps = <T extends { [P in K]?: any }, K extends keyof T>(obj: T, ...keys: K[]): obj is Required<T> => {
     return keys.every(key => obj[key] !== undefined)
 }

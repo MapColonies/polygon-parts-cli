@@ -1,10 +1,11 @@
 import { parse } from 'csv';
 import { createReadStream } from 'fs';
 import { GeoJSONPolygon, parse as geoParse } from 'wellknown';
-import { CLASSIFICATION_MAPPING, PRODUCT_TYPE_MAPPING, SUPPORTED_GEO_TYPES, allFields, requiredFields } from './constants';
+import { ALL_FIELDS, CLASSIFICATION_MAPPING, PRODUCT_TYPE_MAPPING, REQUIRED_FIELDS, SUPPORTED_GEO_TYPES, VALIDATION_ERRORS } from './constants';
+import { CSVValidationError } from './error';
 import { DBProvider } from './pg';
 import { DataSource, DataSourceRecord, ProcessingSummary } from './types';
-import { hasDefinedProps, isInArray, isPartOf } from './utilities';
+import { hasProps, isInArray, isPartOf } from './utilities';
 
 export class FileToDB {
   dbProvider: DBProvider;
@@ -13,7 +14,7 @@ export class FileToDB {
     this.dbProvider = new DBProvider(); // TODO: inject
   }
 
-  public csvToPg = async (): Promise<ProcessingSummary> => {
+  public async csvToPg(): Promise<ProcessingSummary> {
     const dbClient = await this.dbProvider.connectToDb();
     let linesCounter = 0, totalPolygonCounter = 0;
 
@@ -34,7 +35,8 @@ export class FileToDB {
           linesCounter += 1;
           let polygons: GeoJSONPolygon[];
 
-          this.validateData(row, columnMappedKeys); // checking mandatory fields
+          // TODO: add a new error class containing error line in CSV
+          this.validateData(row, columnMappedKeys, linesCounter); // checking mandatory fields
           // TODO: Add validation all mandatory fields exist
           polygons = this.multiPolygonToPolygons(row[columnMappedKeys.geom]);
 
@@ -63,7 +65,7 @@ export class FileToDB {
     });
   }
 
-  private processRow = (row: string[], columnMappedKeys: DataSourceRecord, polygon: GeoJSONPolygon) => {
+  private processRow(row: string[], columnMappedKeys: DataSourceRecord, polygon: GeoJSONPolygon) {
     const classificationKey = row[columnMappedKeys.classification].toLowerCase();
     const productTypeKey = row[columnMappedKeys.productType].toLowerCase();
     const polygonRecord: Record<DataSource, string | number | GeoJSONPolygon | undefined> = {
@@ -96,74 +98,58 @@ export class FileToDB {
   /**
    * Generate hashed object (columnMappedKeys) that map CSV column to numeral value so the column order between csv files not important
    */
-  private constructCsvHeaders = async (): Promise<DataSourceRecord> => {
+  private async constructCsvHeaders(): Promise<DataSourceRecord> {
     return new Promise((resolve, reject) => {
       let enumerableHeaders: Partial<DataSourceRecord> = {};
 
+      // TODO: refactor like above
       createReadStream(this.inputPath)
         .pipe(parse({ delimiter: ',', to_line: 1 }))
         .on('error', reject)
         .on('data', (row: string[]) => {
           for (let i = 0; i < row.length; i++) {
             const key = row[i];
-            if (!isInArray(key, allFields)) continue;
+            if (!isInArray(key, ALL_FIELDS)) continue;
             enumerableHeaders[key] = i;
           }
         })
         .on('end', () => {
-          hasDefinedProps(enumerableHeaders, ...requiredFields) ? resolve(enumerableHeaders) : reject();
+          hasProps(enumerableHeaders, ...REQUIRED_FIELDS) ? resolve(enumerableHeaders) : reject();
         });
     });
   };
 
-  private validateData = (row: string[], columnMappedKeys: DataSourceRecord) => {
-    const classificationKey = row[columnMappedKeys.classification];
-    if (
-      !classificationKey ||
-      !isPartOf(classificationKey.toLowerCase(), CLASSIFICATION_MAPPING)
-    )
-      throw new Error(`Failed validation for current row - invalid classification. classification should be one of: ${Object.keys(CLASSIFICATION_MAPPING)}`);
+  private validateHeaders() {
 
-    const productTypeKey = row[columnMappedKeys.productType];
-    if (
-      !row[columnMappedKeys.productType] ||
-      !isPartOf(productTypeKey.toLowerCase(), PRODUCT_TYPE_MAPPING)
-    )
-      throw new Error(`Failed validation for current row - invalid product type. productType should be one of: ${Object.values(PRODUCT_TYPE_MAPPING)}`);
+  }
 
-    if (!row[columnMappedKeys.recordId])
-      throw new Error(this.formatError('recordId'));
-
-    if (!row[columnMappedKeys.geom]) {
-      throw new Error(this.formatError('geom'));
-    } else {
-      const wkt = row[columnMappedKeys.geom];
-      const geoType = wkt.split(' ')[0];
-      if (!SUPPORTED_GEO_TYPES.includes(geoType))
-        throw new Error(`geom field should consist of Polygon or MultiPolygon WKT geometry types, provided geom: '${geoType}'`);
+  private validateData(row: string[], columnMappedKeys: DataSourceRecord, linesCounter: number) {
+    for (const field of REQUIRED_FIELDS) {
+      if (!row[columnMappedKeys[field]])
+        throw new CSVValidationError(field, linesCounter, VALIDATION_ERRORS.mandatoryField);
     }
 
-    if (!row[columnMappedKeys.sourceEndDateUtc])
-      throw new Error(this.formatError('sourceDateEnd'));
+    for (const field of REQUIRED_FIELDS) {
+      if (!row[columnMappedKeys[field]])
+        throw new CSVValidationError(field, linesCounter, VALIDATION_ERRORS.mandatoryField);
+    }
 
-    if (!row[columnMappedKeys.maxResolutionDegree])
-      throw new Error(this.formatError('maxResolutionDegree'));
+    if (!isPartOf(row[columnMappedKeys.classification].toLowerCase(), CLASSIFICATION_MAPPING))
+      throw new CSVValidationError('classification', linesCounter, VALIDATION_ERRORS.domainValues, ` ${Object.keys(CLASSIFICATION_MAPPING)}`);
 
-    if (!row[columnMappedKeys.maxResolutionMeter])
-      throw new Error(this.formatError('maxResolutionMeter'));
+    if (!isPartOf(row[columnMappedKeys.productType].toLowerCase(), PRODUCT_TYPE_MAPPING))
+      throw new CSVValidationError('productType', linesCounter, VALIDATION_ERRORS.domainValues, ` ${Object.values(PRODUCT_TYPE_MAPPING)}`);
 
-    if (!row[columnMappedKeys.minHorizontalAccuracyCe90])
-      throw new Error(this.formatError('minHorizontalAccuracyCe90'));
+    const wkt = row[columnMappedKeys.geom];
+    const geoType = wkt.split(/[ \(]/, 1)[0];
+    if (!SUPPORTED_GEO_TYPES.includes(geoType))
+      throw new CSVValidationError('geom', linesCounter, VALIDATION_ERRORS.geometryType);
   };
 
-  private formatError = (type: string): string => {
-    return `Failed validation for current row - '${type}' is a mandatory field`;
-  };
-
-  private multiPolygonToPolygons = (wkt: string): GeoJSONPolygon[] => {
+  private multiPolygonToPolygons(wkt: string): GeoJSONPolygon[] {
     const geoJson = geoParse(wkt);
     if (!geoJson) throw new Error('Failed to parse geometry');
-    if (geoJson.type !== 'MultiPolygon' && geoJson.type !== 'Polygon') throw new Error('Only MultiPolygon and Polygon geometry types are supported');
+    if (geoJson.type !== 'MultiPolygon' && geoJson.type !== 'Polygon') throw new Error('Only MULTIPOLYGON and POLYGON geometry types are supported');
     if (geoJson.type === 'Polygon') return [geoJson];
 
     const polygons: GeoJSONPolygon[] = geoJson.coordinates.map((polygonCoordinates) => {

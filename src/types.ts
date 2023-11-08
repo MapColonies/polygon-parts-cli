@@ -1,4 +1,4 @@
-import { allFields } from './constants';
+import { VALIDATION_ERRORS, ALL_FIELDS } from './constants';
 
 export type PGConfig = {
     host: string,
@@ -21,8 +21,10 @@ export type PGConfig = {
     }
 };
 
-export type DataSource = typeof allFields[number];
+export type DataSource = typeof ALL_FIELDS[number];
 export type DataSourceRecord = Record<DataSource, number>;
+
+export type QQQ = keyof typeof VALIDATION_ERRORS;
 
 export type ProcessingSummary = {
     linesProcessed: number,
