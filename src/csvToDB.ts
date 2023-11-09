@@ -1,18 +1,21 @@
 import { wktToGeoJSON } from '@terraformer/wkt';
+import config from 'config';
 import { parse } from 'csv';
 import { createReadStream } from 'fs';
 import type { GeoJSON, Polygon } from 'geojson';
 import { ALL_FIELDS, CLASSIFICATION_MAPPING, PRODUCT_TYPE_MAPPING, REQUIRED_FIELDS, SUPPORTED_GEO_TYPES, VALIDATION_ERRORS } from './constants';
 import { CSVValidationError } from './error';
 import { DBProvider } from './pg';
-import type { FieldsRecord, PolygonRecord, ProcessingSummary } from './types';
+import type { CSVConfig, FieldsRecord, PolygonRecord, ProcessingSummary } from './types';
 import { isPartOf } from './utilities';
 
 export class CSVToDB {
   dbProvider: DBProvider;
+  csvConfig: CSVConfig;
 
   constructor(private readonly inputPath: string) {
     this.dbProvider = new DBProvider(); // TODO: inject
+    this.csvConfig = config.get<CSVConfig>('csv');
   }
 
   public async csvToPg(): Promise<ProcessingSummary> {
@@ -28,7 +31,7 @@ export class CSVToDB {
       try {
         const readStream = createReadStream(this.inputPath)
           .pipe(parse({
-            delimiter: ',',
+            delimiter: this.csvConfig.delimiter,
             from_line: 2,
           }));
 
@@ -99,8 +102,12 @@ export class CSVToDB {
     return new Promise((resolve, reject) => {
       let headers: Record<PropertyKey, number> = {};
 
+      // TODO: refactor like above
       createReadStream(this.inputPath)
-        .pipe(parse({ delimiter: ',', to_line: 1 }))
+        .pipe(parse({
+          delimiter: this.csvConfig.delimiter,
+          to_line: 1
+        }))
         .on('error', reject)
         .on('data', (row: string[]) => {
           for (let i = 0; i < row.length; i++) {
@@ -131,6 +138,8 @@ export class CSVToDB {
       if (!row[columnMappedKeys[field]])
         throw new CSVValidationError(field, VALIDATION_ERRORS.mandatoryField, lineNumber, undefined);
     }
+
+    // TODO: add type validation
 
     if (!isPartOf(row[columnMappedKeys.classification].toLowerCase(), CLASSIFICATION_MAPPING))
       throw new CSVValidationError('classification', VALIDATION_ERRORS.domainValues, lineNumber, ` ${Object.keys(CLASSIFICATION_MAPPING)}`);

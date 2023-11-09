@@ -1,6 +1,10 @@
 import type { Polygon } from 'geojson';
 import { ALL_FIELDS } from './constants';
 
+export type CSVConfig = {
+    delimiter: string
+};
+
 export type PGConfig = {
     host: string,
     port: number,
