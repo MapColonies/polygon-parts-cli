@@ -1,6 +1,6 @@
 import yargs, { showHelp } from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { FileToDB } from './dataSource';
+import { CSVToDB } from './csvToDB';
 import { getErrorMessage } from './utilities';
 
 const argv = yargs(hideBin(process.argv))
@@ -8,24 +8,22 @@ const argv = yargs(hideBin(process.argv))
   .option('i', {
     alias: 'input',
     describe: 'input file (csv)',
-    type: 'string',
-    demandOption: true,
+    type: 'string'
   })
+  .version(require('../package.json').version)
   .help(true)
   .parseSync();
 
-if (!argv.i && !argv.input) {
-  showHelp();
-} else {
+if (argv.i) {
   const filePath = argv.i;
 
-  const partsUploader = new FileToDB(filePath);
+  const polygonPartsUploader = new CSVToDB(filePath);
 
   (async () => {
     let exitCode: number = 1;
     try {
       console.log(`Start processing file: ${filePath}`);
-      const summary = await partsUploader.csvToPg();
+      const summary = await polygonPartsUploader.csvToPg();
       console.log('Processing finished');
       console.log(`Summary:
 Total lines processed: ${summary.linesProcessed}
@@ -39,4 +37,8 @@ Polygons processed: ${summary.polygonsProcessed}
       process.exit(exitCode);
     }
   })();
+}
+
+else {
+  showHelp();
 }
