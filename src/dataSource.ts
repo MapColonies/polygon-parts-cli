@@ -128,11 +128,6 @@ export class FileToDB {
         throw new CSVValidationError(field, linesCounter, VALIDATION_ERRORS.mandatoryField);
     }
 
-    for (const field of REQUIRED_FIELDS) {
-      if (!row[columnMappedKeys[field]])
-        throw new CSVValidationError(field, linesCounter, VALIDATION_ERRORS.mandatoryField);
-    }
-
     if (!isPartOf(row[columnMappedKeys.classification].toLowerCase(), CLASSIFICATION_MAPPING))
       throw new CSVValidationError('classification', linesCounter, VALIDATION_ERRORS.domainValues, ` ${Object.keys(CLASSIFICATION_MAPPING)}`);
 
