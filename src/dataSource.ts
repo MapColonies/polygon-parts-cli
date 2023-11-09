@@ -116,7 +116,7 @@ export class FileToDB {
           hasProps(enumerableHeaders, ...REQUIRED_FIELDS) ? resolve(enumerableHeaders) : reject();
         });
     });
-  };
+  }
 
   private validateHeaders() {
 
@@ -138,7 +138,7 @@ export class FileToDB {
     const geoType = wkt.split(/[ \(]/, 1)[0];
     if (!SUPPORTED_GEO_TYPES.includes(geoType))
       throw new CSVValidationError('geom', linesCounter, VALIDATION_ERRORS.geometryType);
-  };
+  }
 
   private multiPolygonToPolygons(wkt: string): Polygon[] {
     const geoJson = wktToGeoJSON(wkt);
@@ -152,5 +152,5 @@ export class FileToDB {
       default:
         throw new Error('Only MULTIPOLYGON and POLYGON geometry types are supported');
     }
-  };
+  }
 }
