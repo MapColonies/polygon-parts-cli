@@ -1,8 +1,7 @@
 import config from 'config';
 import { readFileSync } from 'fs';
-import type { Polygon } from 'geojson';
 import pg, { Pool, PoolClient, PoolConfig } from 'pg';
-import { DataSource, PGConfig } from './types';
+import type { PGConfig, PolygonRecord } from './types';
 
 export class DBProvider {
   dbConfig: PGConfig;
@@ -62,7 +61,7 @@ export class DBProvider {
     this.pool.end();
   }
 
-  public async insertPolygon(polygon: Record<DataSource, string | number | Polygon | undefined>,
+  public async insertPolygon(polygon: PolygonRecord,
     pgClient: PoolClient): Promise<number> {
     const fields = Object.keys(polygon).map(polygon => `"${polygon}"`);
     const values = Object.values(polygon);

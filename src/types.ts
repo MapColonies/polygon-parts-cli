@@ -1,4 +1,5 @@
-import { VALIDATION_ERRORS, ALL_FIELDS } from './constants';
+import type { Polygon } from 'geojson';
+import { ALL_FIELDS } from './constants';
 
 export type PGConfig = {
     host: string,
@@ -23,6 +24,8 @@ export type PGConfig = {
 
 export type DataSource = typeof ALL_FIELDS[number];
 export type DataSourceRecord = Record<DataSource, number>;
+
+export type PolygonRecord = Record<DataSource, string | number | Polygon | undefined>;
 
 export type ProcessingSummary = {
     linesProcessed: number,

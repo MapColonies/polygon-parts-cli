@@ -5,7 +5,7 @@ import type { Polygon } from 'geojson';
 import { ALL_FIELDS, CLASSIFICATION_MAPPING, PRODUCT_TYPE_MAPPING, REQUIRED_FIELDS, SUPPORTED_GEO_TYPES, VALIDATION_ERRORS } from './constants';
 import { CSVValidationError } from './error';
 import { DBProvider } from './pg';
-import type { DataSource, DataSourceRecord, ProcessingSummary } from './types';
+import type { DataSourceRecord, PolygonRecord, ProcessingSummary } from './types';
 import { hasProps, isInArray, isPartOf } from './utilities';
 
 export class FileToDB {
@@ -67,7 +67,7 @@ export class FileToDB {
   private processRow(row: string[], columnMappedKeys: DataSourceRecord, polygon: Polygon) {
     const classificationKey = row[columnMappedKeys.classification].toLowerCase();
     const productTypeKey = row[columnMappedKeys.productType].toLowerCase();
-    const polygonRecord: Record<DataSource, string | number | Polygon | undefined> = {
+    const polygonRecord: PolygonRecord = {
       recordId: row[columnMappedKeys.recordId],
       productId: row[columnMappedKeys.productId] ?? 'unknown',
       productName: row[columnMappedKeys.productName] ?? 'unknown',

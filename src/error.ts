@@ -1,4 +1,4 @@
-import { DataSource } from "./types";
+import type { DataSource } from "./types";
 
 export class CSVValidationError extends Error {
     constructor(private readonly field: DataSource, private readonly lineNumber: number, private readonly errMessage: string, private readonly optionalData?: string) {
