@@ -13,6 +13,8 @@ export type PGConfig = {
     password: string,
     schema: string,
     table: string,
+    storedProcedure: string,
+    insertPolygonPartRecord: string,
     sslEnabled: boolean,
     rejectUnauthorized: boolean,
     sslPaths: {

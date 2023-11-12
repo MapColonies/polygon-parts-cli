@@ -7,6 +7,8 @@
     "password": "postgres",
     "schema": "PolygonParts",
     "table": "parts",
+    "storedProcedure": "insert_polygon_part",
+    "insertPolygonPartRecord": "insert_polygon_part_record",
     "sslEnabled": false,
     "rejectUnauthorized": false,
     "sslPaths": {

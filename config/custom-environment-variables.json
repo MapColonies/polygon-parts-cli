@@ -10,6 +10,8 @@
         "password": "DB_PASSWORD",
         "schema": "DB_SCHEMA",
         "table": "DB_TABLE",
+        "storedProcedure": "DB_STORED_PROCEDURE",
+        "insertPolygonPartRecord": "DB_INSERT_POLYGON_PART_RECORD",
         "sslEnabled": {
             "__name": "DB_SSL_ENABLED",
             "__format": "boolean"

@@ -11,20 +11,22 @@ This basic CLI inserts CSV data into PolygonParts DB
 ## CSV structure
 | Field | What is it    | Mandatory   | possible values\examples |
 | :---:   | :---: | :---: | :---: |
-| geom | geometry of feature, may be MultiPolygon or Polygon   | +  | |
+| geom | WKT geometry of feature, may be `MULTIPOLYGON` or `POLYGON`   | +  | |
 | recordId | Catalog ID of original layer   | +   | will be UUID |
 | productId | Name of Parts source   | -   | |
-| classification | Level of classification provided   | +   | unclassified(6), confidential(5), secret(4), topSecret(3) | 
+| classification | Level of classification provided   | +   | Unclassified, Confidential, Secret, TopSecret | 
 | productType | discrete type   | +   | Orthophoto, OrthophotoHistory, OrthophotoBest, RasterMap, RasterMapBest, RasterAid, RasterAidBest, RasterVector, RasterVectorBest| 
-| srsName | On default epsg:4326   | - <br/> (Not in use)   | GCS_WGS_1984 |
+| srsName | On default `GCS_WGS_1984`   | - <br/> (Not in use)   | GCS_WGS_1984 |
 | description | free text of information   | - |  |
 | imageName | original image name   | - |  |
-| minHorizontalAccuracyCe90 |   | - | number |
+| minHorizontalAccuracyCE90 |   | - | float |
 | maxResolutionMeter | used for min also  | - | float |
 | sensors | list of sensor name  | - | OGEN_CHAD, WORLDVIEW2|
 | productName | internal name of material | - | |
+| productVersion | product version of the polygon part | - | |
 | sourceDateEnd | will be used also for "start" | + | YYYY-MM-DD hh:mm:ss|
-| maxResolutionDegree | used for min also  | - | float |
+| maxResolutionDeg | used for min also  | - | float |
+| region | region / countries  | - |  |
 
 
 ## Installation

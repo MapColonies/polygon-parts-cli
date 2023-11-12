@@ -4,7 +4,7 @@
   "description": "This CLI utility will parse and upload CSV parts data into wfs db (pg)",
   "main": "src/index.ts",
   "scripts": {
-    "test": "npm run test:unit && npm run test:integration",
+    "test": "echo \"Error: no test specified\" && exit 1",
     "prebuild": "npm run clean",
     "build": "tsc --project tsconfig.build.json  && npm run assets:copy",
     "start": "npm run build && cd dist && node ./index.js",

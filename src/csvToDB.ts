@@ -3,11 +3,10 @@ import config from 'config';
 import { parse } from 'csv';
 import { createReadStream } from 'fs';
 import type { GeoJSON, Polygon } from 'geojson';
-import { ALL_FIELDS, CLASSIFICATION_MAPPING, PRODUCT_TYPE_MAPPING, REQUIRED_FIELDS, SUPPORTED_GEO_TYPES, VALIDATION_ERRORS } from './constants';
+import { ALL_FIELDS, REQUIRED_FIELDS, SUPPORTED_GEO_TYPES, VALIDATION_ERRORS } from './constants';
 import { CSVValidationError } from './error';
 import { DBProvider } from './pg';
 import type { CSVConfig, FieldsRecord, PolygonRecord, ProcessingSummary } from './types';
-import { isPartOf } from './utilities';
 
 export class CSVToDB {
   dbProvider: DBProvider;
@@ -19,14 +18,18 @@ export class CSVToDB {
   }
 
   public async csvToPg(): Promise<ProcessingSummary> {
-    const dbClient = await this.dbProvider.connectToDb();
-    let lineNumber = 0, totalPolygonCounter = 0;
-
     console.log('Processing file headers');
     const mappedKeys = await this.mapColumnsToKeys(); // load actual column header name and map it by indexes
     if (!this.validateHeaders(mappedKeys)) throw new Error('Headers validation error');
 
     console.log('Processing file content');
+    return this.processContent(mappedKeys);
+  }
+
+  private async processContent(mappedKeys: FieldsRecord): Promise<ProcessingSummary> {
+    const dbClient = await this.dbProvider.connectToDb();
+    let lineNumber = 0, totalPolygonCounter = 0;
+
     return new Promise<ProcessingSummary>(async (resolve, reject) => {
       try {
         const readStream = createReadStream(this.inputPath)
@@ -47,7 +50,6 @@ export class CSVToDB {
             polygonCounter += 1;
             console.log(`Processing line number ${lineNumber} -- polygon ${polygonCounter} out of ${polygons.length}`);
             const polygonRecord = this.processRow(row, mappedKeys, polygon);
-
             const rowsInserted = await this.dbProvider.insertPolygon(polygonRecord, dbClient);
             totalPolygonCounter += rowsInserted;
           }
@@ -68,30 +70,30 @@ export class CSVToDB {
   }
 
   private processRow(row: string[], mappedKeys: FieldsRecord, polygon: Polygon) {
-    const classificationKey = row[mappedKeys.classification].toLowerCase();
-    const productTypeKey = row[mappedKeys.productType].toLowerCase();
     const polygonRecord: PolygonRecord = {
       recordId: row[mappedKeys.recordId],
-      productId: row[mappedKeys.productId] ?? 'unknown',
-      productName: row[mappedKeys.productName] ?? 'unknown',
+      productId: row[mappedKeys.productId],
+      productName: row[mappedKeys.productName],
       productVersion: row[mappedKeys.productVersion],
-      productType: isPartOf(productTypeKey, PRODUCT_TYPE_MAPPING) ? PRODUCT_TYPE_MAPPING[productTypeKey] : undefined,
-      imageName: row[mappedKeys.imageName],
       //TODO - start date taken from end
-      sourceStartDateUtc: row[mappedKeys.sourceEndDateUtc],
-      sourceEndDateUtc: row[mappedKeys.sourceEndDateUtc],
+      sourceDateStart: row[mappedKeys.sourceDateEnd],
+      sourceDateEnd: row[mappedKeys.sourceDateEnd],
       //TODO - min res taken from max
-      minResolutionDegree: parseFloat(row[mappedKeys.maxResolutionDegree]),
-      maxResolutionDegree: parseFloat(row[mappedKeys.maxResolutionDegree]),
+      minResolutionDeg: parseFloat(row[mappedKeys.maxResolutionDeg]),
+      maxResolutionDeg: parseFloat(row[mappedKeys.maxResolutionDeg]),
       //TODO - min res taken from max
       minResolutionMeter: parseFloat(row[mappedKeys.maxResolutionMeter]),
       maxResolutionMeter: parseFloat(row[mappedKeys.maxResolutionMeter]),
-      minHorizontalAccuracyCe90: parseFloat(row[mappedKeys.minHorizontalAccuracyCe90]),
+      //TODO - min res taken from max
+      minHorizontalAccuracyCE90: parseFloat(row[mappedKeys.minHorizontalAccuracyCE90]),
+      maxHorizontalAccuracyCE90: parseFloat(row[mappedKeys.minHorizontalAccuracyCE90]),
       sensors: row[mappedKeys.sensors],
-      region: row[mappedKeys.region] ?? 'unknown',
-      classification: isPartOf(classificationKey, CLASSIFICATION_MAPPING) ? CLASSIFICATION_MAPPING[classificationKey] : undefined,
-      description: row[mappedKeys.description] ?? '',
+      region: row[mappedKeys.region],
+      classification: row[mappedKeys.classification],
+      description: row[mappedKeys.description],
       geom: polygon,
+      imageName: row[mappedKeys.imageName],
+      productType: row[mappedKeys.productType],
       srsName: row[mappedKeys.srsName],
     };
     return polygonRecord;
@@ -133,21 +135,13 @@ export class CSVToDB {
     return true;
   }
 
-  private validateContent(row: string[], columnMappedKeys: FieldsRecord, lineNumber: number): void {
+  private validateContent(row: string[], mappedKeys: FieldsRecord, lineNumber: number): void {
     for (const field of REQUIRED_FIELDS) {
-      if (!row[columnMappedKeys[field]])
+      if (!row[mappedKeys[field]])
         throw new CSVValidationError(field, VALIDATION_ERRORS.mandatoryField, lineNumber, undefined);
     }
 
-    // TODO: add type validation
-
-    if (!isPartOf(row[columnMappedKeys.classification].toLowerCase(), CLASSIFICATION_MAPPING))
-      throw new CSVValidationError('classification', VALIDATION_ERRORS.domainValues, lineNumber, ` ${Object.keys(CLASSIFICATION_MAPPING)}`);
-
-    if (!isPartOf(row[columnMappedKeys.productType].toLowerCase(), PRODUCT_TYPE_MAPPING))
-      throw new CSVValidationError('productType', VALIDATION_ERRORS.domainValues, lineNumber, ` ${Object.values(PRODUCT_TYPE_MAPPING)}`);
-
-    const wkt = row[columnMappedKeys.geom];
+    const wkt = row[mappedKeys.geom];
     const geoType = wkt.split(/[ \(]/, 1)[0];
     if (!SUPPORTED_GEO_TYPES.includes(geoType))
       throw new CSVValidationError('geom', VALIDATION_ERRORS.geometryType, lineNumber, undefined);
