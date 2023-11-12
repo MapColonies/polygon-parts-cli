@@ -62,21 +62,14 @@ export class DBProvider {
   }
 
   public async insertPolygon(polygon: PolygonRecord,
-    pgClient: PoolClient): Promise<number> {
-    // const fields = Object.keys(polygon).map(polygon => `'${polygon}'`);
-    const values = Object.values(polygon);
-    // const fieldsPlaceholders = fields.map((_, index) => `$${index + 1}`);
+    pgClient: PoolClient): Promise<void> {
     const insertPolygonPartFields = ['recordId', 'productId', 'productName', 'productVersion', 'sourceDateStart', 'sourceDateEnd', 'minResolutionDeg', 'maxResolutionDeg', 'minResolutionMeter', 'maxResolutionMeter', 'minHorizontalAccuracyCE90', 'maxHorizontalAccuracyCE90', 'sensors', 'region', 'classification', 'description', 'geom', 'imageName', 'productType', 'srsName']
     const insertPolygonPartValues = Object.entries(polygon).map(([key, value]) => {
       if (insertPolygonPartFields.includes(key)) return value;
     });
     const fieldsPlaceholders = insertPolygonPartFields.map((_, index) => `$${index + 1}`);
-    // const query = `INSERT INTO \'${this.dbConfig.schema}\'.${this.dbConfig.table}(${fields}) VALUES (${fieldsPlaceholders})`;
     const query = `CALL ${this.dbConfig.storedProcedure}((${fieldsPlaceholders})::\"${this.dbConfig.schema}\".${this.dbConfig.insertPolygonPartRecord})`;
 
-    const TEMP = insertPolygonPartValues.map(v => typeof v === 'object' ? JSON.stringify(v) : v).map(v => typeof v === 'number'? v: `'${v}'`).join(',');
-    console.log(`CALL ${this.dbConfig.storedProcedure}((${TEMP})::\"${this.dbConfig.schema}\".${this.dbConfig.insertPolygonPartRecord})`);
-    const response = await pgClient.query(query, insertPolygonPartValues);
-    return response.rowCount;
+    await pgClient.query(query, insertPolygonPartValues);
   }
 }

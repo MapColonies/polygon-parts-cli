@@ -3,8 +3,9 @@ import config from 'config';
 import { parse } from 'csv';
 import { createReadStream } from 'fs';
 import type { GeoJSON, Polygon } from 'geojson';
+import { DatabaseError } from 'pg';
 import { ALL_FIELDS, REQUIRED_FIELDS, SUPPORTED_GEO_TYPES, VALIDATION_ERRORS } from './constants';
-import { CSVValidationError } from './error';
+import { CSVValidationError, DBError } from './error';
 import { DBProvider } from './pg';
 import type { CSVConfig, FieldsRecord, PolygonRecord, ProcessingSummary } from './types';
 
@@ -50,8 +51,14 @@ export class CSVToDB {
             polygonCounter += 1;
             console.log(`Processing line number ${lineNumber} -- polygon ${polygonCounter} out of ${polygons.length}`);
             const polygonRecord = this.processRow(row, mappedKeys, polygon);
-            const rowsInserted = await this.dbProvider.insertPolygon(polygonRecord, dbClient);
-            totalPolygonCounter += rowsInserted;
+
+            try {
+              await this.dbProvider.insertPolygon(polygonRecord, dbClient);
+            } catch (err) {
+              if (err instanceof DatabaseError)
+                throw new DBError(err.message, lineNumber);
+            }
+            totalPolygonCounter += 1;
           }
         }
         this.dbProvider.commit(dbClient);
