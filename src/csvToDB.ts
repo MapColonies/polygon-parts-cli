@@ -82,16 +82,12 @@ export class CSVToDB {
       productId: row[mappedKeys.productId],
       productName: row[mappedKeys.productName],
       productVersion: row[mappedKeys.productVersion],
-      //TODO - start date taken from end
       sourceDateStart: row[mappedKeys.sourceDateEnd],
       sourceDateEnd: row[mappedKeys.sourceDateEnd],
-      //TODO - min res taken from max
       minResolutionDeg: parseFloat(row[mappedKeys.maxResolutionDeg]),
       maxResolutionDeg: parseFloat(row[mappedKeys.maxResolutionDeg]),
-      //TODO - min res taken from max
       minResolutionMeter: parseFloat(row[mappedKeys.maxResolutionMeter]),
       maxResolutionMeter: parseFloat(row[mappedKeys.maxResolutionMeter]),
-      //TODO - min res taken from max
       minHorizontalAccuracyCE90: parseFloat(row[mappedKeys.minHorizontalAccuracyCE90]),
       maxHorizontalAccuracyCE90: parseFloat(row[mappedKeys.minHorizontalAccuracyCE90]),
       sensors: row[mappedKeys.sensors],
