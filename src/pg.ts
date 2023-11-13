@@ -1,6 +1,7 @@
 import config from 'config';
 import { readFileSync } from 'fs';
 import pg, { Pool, PoolClient, PoolConfig } from 'pg';
+import { INSERT_POLYGON_PART_FIELDS } from './constants';
 import type { PGConfig, PolygonRecord } from './types';
 
 export class DBProvider {
@@ -63,11 +64,10 @@ export class DBProvider {
 
   public async insertPolygon(polygon: PolygonRecord,
     pgClient: PoolClient): Promise<void> {
-    const insertPolygonPartFields = ['recordId', 'productId', 'productName', 'productVersion', 'sourceDateStart', 'sourceDateEnd', 'minResolutionDeg', 'maxResolutionDeg', 'minResolutionMeter', 'maxResolutionMeter', 'minHorizontalAccuracyCE90', 'maxHorizontalAccuracyCE90', 'sensors', 'region', 'classification', 'description', 'geom', 'imageName', 'productType', 'srsName']
     const insertPolygonPartValues = Object.entries(polygon).map(([key, value]) => {
-      if (insertPolygonPartFields.includes(key)) return value;
+      if (INSERT_POLYGON_PART_FIELDS.includes(key)) return value;
     });
-    const fieldsPlaceholders = insertPolygonPartFields.map((_, index) => `$${index + 1}`);
+    const fieldsPlaceholders = INSERT_POLYGON_PART_FIELDS.map((_, index) => `$${index + 1}`);
     const query = `CALL ${this.dbConfig.storedProcedure}((${fieldsPlaceholders})::\"${this.dbConfig.schema}\".${this.dbConfig.insertPolygonPartRecord})`;
 
     await pgClient.query(query, insertPolygonPartValues);
