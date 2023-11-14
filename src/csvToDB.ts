@@ -61,13 +61,13 @@ export class CSVToDB {
             totalPolygonCounter += 1;
           }
         }
-        this.dbProvider.commit(dbClient);
+        await this.dbProvider.commit(dbClient);
         resolve({
           linesProcessed: lineNumber,
           polygonsProcessed: totalPolygonCounter
         });
       } catch (err) {
-        this.dbProvider.rollback(dbClient);
+        await this.dbProvider.rollback(dbClient);
         reject(err);
       } finally {
         dbClient.release();

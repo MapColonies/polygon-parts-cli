@@ -50,16 +50,16 @@ export class DBProvider {
     return pgClient;
   }
 
-  public commit(pgClient: PoolClient) {
-    pgClient.query('COMMIT');
+  public async commit(pgClient: PoolClient) {
+    await pgClient.query('COMMIT');
   }
 
-  public rollback(pgClient: PoolClient) {
-    pgClient.query('ROLLBACK');
+  public async rollback(pgClient: PoolClient) {
+    await pgClient.query('ROLLBACK');
   }
 
   public async end() {
-    this.pool.end();
+    await this.pool.end();
   }
 
   public async insertPolygon(polygon: PolygonRecord,
