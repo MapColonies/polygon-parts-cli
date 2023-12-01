@@ -68,7 +68,7 @@ export class DBProvider {
       if (INSERT_POLYGON_PART_FIELDS.includes(key)) return value;
     });
     const fieldsPlaceholders = INSERT_POLYGON_PART_FIELDS.map((_, index) => `$${index + 1}`);
-    const query = `CALL ${this.dbConfig.storedProcedure}((${fieldsPlaceholders})::\"${this.dbConfig.schema}\".${this.dbConfig.insertPolygonPartRecord})`;
+    const query = `CALL \"${this.dbConfig.schema}\"${this.dbConfig.storedProcedure}((${fieldsPlaceholders})::\"${this.dbConfig.schema}\".${this.dbConfig.insertPolygonPartRecord})`;
 
     await pgClient.query(query, insertPolygonPartValues);
   }

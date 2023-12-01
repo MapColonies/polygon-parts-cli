@@ -4,10 +4,11 @@ import { parse } from 'csv';
 import { createReadStream } from 'fs';
 import type { GeoJSON, Polygon } from 'geojson';
 import { DatabaseError } from 'pg';
-import { ALL_FIELDS, REQUIRED_FIELDS, SUPPORTED_GEO_TYPES, VALIDATION_ERRORS } from './constants';
+import { ALL_FIELDS, OPTIONAL_FIELDS, REQUIRED_FIELDS, SUPPORTED_GEO_TYPES, VALIDATION_ERRORS } from './constants';
 import { CSVValidationError, DBError } from './error';
 import { DBProvider } from './pg';
 import type { CSVConfig, FieldsRecord, PolygonRecord, ProcessingSummary } from './types';
+import { isInArray } from './utilities';
 
 export class CSVToDB {
   dbProvider: DBProvider;
@@ -76,29 +77,41 @@ export class CSVToDB {
     });
   }
 
+  private getValue<T extends any>(row: Array<T>, field: number): T {
+    const value = row.at(field);
+    if (value === undefined) throw new RangeError('Index is not in range');
+    return value;
+  }
+
   private processRow(row: string[], mappedKeys: FieldsRecord, polygon: Polygon) {
     const polygonRecord: PolygonRecord = {
-      recordId: row[mappedKeys.recordId],
-      productId: row[mappedKeys.productId],
-      productName: row[mappedKeys.productName],
-      productVersion: row[mappedKeys.productVersion],
-      sourceDateStart: row[mappedKeys.sourceDateEnd],
-      sourceDateEnd: row[mappedKeys.sourceDateEnd],
-      minResolutionDeg: parseFloat(row[mappedKeys.maxResolutionDeg]),
-      maxResolutionDeg: parseFloat(row[mappedKeys.maxResolutionDeg]),
-      minResolutionMeter: parseFloat(row[mappedKeys.maxResolutionMeter]),
-      maxResolutionMeter: parseFloat(row[mappedKeys.maxResolutionMeter]),
-      minHorizontalAccuracyCE90: parseFloat(row[mappedKeys.minHorizontalAccuracyCE90]),
-      maxHorizontalAccuracyCE90: parseFloat(row[mappedKeys.minHorizontalAccuracyCE90]),
-      sensors: row[mappedKeys.sensors],
-      region: row[mappedKeys.region],
-      classification: row[mappedKeys.classification],
-      description: row[mappedKeys.description],
+      recordId: this.getValue(row, mappedKeys.recordId),
+      productId: this.getValue(row, mappedKeys.productId),
+      productName: this.getValue(row, mappedKeys.productName),
+      productVersion: this.getValue(row, mappedKeys.productVersion),
+      sourceDateStart: this.getValue(row, mappedKeys.sourceDateEnd),
+      sourceDateEnd: this.getValue(row, mappedKeys.sourceDateEnd),
+      minResolutionDeg: parseFloat(this.getValue(row, mappedKeys.maxResolutionDeg)),
+      maxResolutionDeg: parseFloat(this.getValue(row, mappedKeys.maxResolutionDeg)),
+      minResolutionMeter: parseFloat(this.getValue(row, mappedKeys.maxResolutionMeter)),
+      maxResolutionMeter: parseFloat(this.getValue(row, mappedKeys.maxResolutionMeter)),
+      minHorizontalAccuracyCE90: parseFloat(this.getValue(row, mappedKeys.minHorizontalAccuracyCE90)),
+      maxHorizontalAccuracyCE90: parseFloat(this.getValue(row, mappedKeys.minHorizontalAccuracyCE90)),
+      sensors: this.getValue(row, mappedKeys.sensors),
+      region: this.getValue(row, mappedKeys.region),
+      classification: this.getValue(row, mappedKeys.classification),
+      description: this.getValue(row, mappedKeys.description),
       geom: polygon,
-      imageName: row[mappedKeys.imageName],
-      productType: row[mappedKeys.productType],
-      srsName: row[mappedKeys.srsName],
+      imageName: this.getValue(row, mappedKeys.imageName),
+      productType: this.getValue(row, mappedKeys.productType),
+      srsName: this.getValue(row, mappedKeys.srsName),
     };
+
+    // replace empty string values with nulls for optional fields
+    Object.entries(polygonRecord).forEach(([key, value]) => {
+      if (isInArray(key, OPTIONAL_FIELDS) && value === '') polygonRecord[key] = null
+    });
+
     return polygonRecord;
   }
 

@@ -30,7 +30,8 @@ export type PGConfig = {
 
 export type Field = typeof ALL_FIELDS[number];
 export type FieldsRecord = Record<Field, number>;
-export type PolygonRecord = Record<Field, string | number | Polygon | undefined>;
+export type PolygonRecordValues = string | number | Polygon | null;
+export type PolygonRecord = Record<Field, PolygonRecordValues>;
 
 export type ProcessingSummary = {
     linesProcessed: number,
