@@ -58,6 +58,7 @@ export class CSVToDB {
             } catch (err) {
               if (err instanceof DatabaseError)
                 throw new DBError(err.message, lineNumber);
+              throw new Error('Could not insert the polygon');
             }
             totalPolygonCounter += 1;
           }
@@ -68,8 +69,15 @@ export class CSVToDB {
           polygonsProcessed: totalPolygonCounter
         });
       } catch (err) {
-        await this.dbProvider.rollback(dbClient);
-        reject(err);
+        try {
+          await this.dbProvider.rollback(dbClient);
+        } catch (err) {
+          if (err instanceof DatabaseError)
+            throw new DBError(err.message, lineNumber);
+          throw new Error('Could not rollback the transaction');
+        } finally {
+          reject(err);
+        }
       } finally {
         dbClient.release();
         await this.dbProvider.end();
