@@ -5,3 +5,9 @@ export const getErrorMessage = (err: unknown): string => {
     else message = String(err);
     return message;
 }
+
+export const isInArray = <T extends string>(value: string, array: Readonly<Array<T>>): value is T => {
+    return !!array.find(item => item === value);
+}
+
+export type RowValue<T> = T extends Array<infer U> ? U : never;

@@ -55,6 +55,7 @@ export const INSERT_POLYGON_PART_FIELDS = [
 ];
 
 export const VALIDATION_ERRORS = {
+  unsupportedHeader: 'unsupported header',
   mandatoryField: 'missing a mandatory field',
   domainValues: 'value should be one of',
   geometryType: 'Only MULTIPOLYGON and POLYGON geometry types are supported'

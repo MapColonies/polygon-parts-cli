@@ -22,11 +22,11 @@ if (argv.i) {
   (async () => {
     let exitCode: number = 1;
     try {
-      console.log(`Start processing file: ${filePath}`);
+      console.log(`Start processing file: ${filePath}`); // TODO: replace with @map-colonies/js-logger
       const summary = await polygonPartsUploader.csvToPg();
       console.log('Processing finished');
       console.log(`Summary:
-Total lines processed: ${summary.linesProcessed}
+Total rows processed: ${summary.rowsProcessed}
 Polygons processed: ${summary.polygonsProcessed}
     `);
       exitCode = 0;

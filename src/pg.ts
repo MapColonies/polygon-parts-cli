@@ -2,7 +2,7 @@ import config from 'config';
 import { readFileSync } from 'fs';
 import pg, { Pool, PoolClient, PoolConfig } from 'pg';
 import { INSERT_POLYGON_PART_FIELDS } from './constants';
-import type { PGConfig, PolygonRecord } from './types';
+import type { PGConfig, PolygonPartRecord } from './types';
 
 export class DBProvider {
   dbConfig: PGConfig;
@@ -62,7 +62,7 @@ export class DBProvider {
     await this.pool.end();
   }
 
-  public async insertPolygon(polygon: PolygonRecord,
+  public async insertPolygon(polygon: PolygonPartRecord,
     pgClient: PoolClient): Promise<void> {
     const insertPolygonPartValues = Object.entries(polygon).map(([key, value]) => {
       if (INSERT_POLYGON_PART_FIELDS.includes(key)) return value;
