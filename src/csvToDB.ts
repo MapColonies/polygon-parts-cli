@@ -1,14 +1,17 @@
 import { wktToGeoJSON } from '@terraformer/wkt';
+import booleanIntersects from '@turf/boolean-intersects';
+import union from '@turf/union';
 import config from 'config';
 import { parse } from 'csv';
 import { createReadStream } from 'fs';
-import type { GeoJSON, Polygon } from 'geojson';
+import type { Feature, GeoJSON, GeoJsonProperties, MultiPolygon, Polygon } from 'geojson';
 import { DatabaseError } from 'pg';
 import { ALL_FIELDS, OPTIONAL_FIELDS, REQUIRED_FIELDS, SUPPORTED_GEO_TYPES, VALIDATION_ERRORS } from './constants';
 import { CSVContentValidationError, CSVHeaderValidationError, DBError } from './error';
 import { DBProvider } from './pg';
 import type { CSVConfig, FieldsRecord, PolygonPartRecord, ProcessingSummary } from './types';
 import { RowValue, isInArray } from './utilities';
+import flatten from '@turf/flatten';
 
 export class CSVToDB {
   dbProvider: DBProvider;
@@ -171,6 +174,45 @@ export class CSVToDB {
       throw new CSVContentValidationError('geom', VALIDATION_ERRORS.geometryType, rowNumber, undefined);
   }
 
+  private mergeOverlappingMultiParts(polygons: Polygon[]): Polygon[] {
+    let i = 0, j;
+
+    const uniqueOverlappingPartsIndices = new Set<number>();
+
+    while (polygons[i]) {
+      j = i + 1;
+      while (polygons[j]) {
+        if (booleanIntersects(polygons[i], polygons[j])) {
+          uniqueOverlappingPartsIndices.add(i);
+          uniqueOverlappingPartsIndices.add(j);
+        }
+        j++;
+      }
+      i++;
+    }
+    
+    const overlappingPartsIndices = Array.from(uniqueOverlappingPartsIndices);
+    if (overlappingPartsIndices.length === 0) return polygons;
+
+    let overlappingParts: Feature<Polygon | MultiPolygon, GeoJsonProperties> = {
+      type: 'Feature',
+      geometry: polygons[overlappingPartsIndices[0]],
+      properties: {}
+    };
+
+    for (let i = 1; i < overlappingPartsIndices.length - 1; i++) {
+      overlappingParts = union(overlappingParts, polygons[overlappingPartsIndices[i]]) ?? overlappingParts;
+    }
+
+    const overlappingPolygonParts = flatten(overlappingParts).features.map((feature) => feature.geometry);
+    const nonOverlappingPolygonParts = polygons.filter((_, overlappingPartIndex) => !overlappingPartsIndices.includes(overlappingPartIndex));
+
+    return [
+      ...overlappingPolygonParts,
+      ...nonOverlappingPolygonParts
+    ];
+  }
+
   private getPolygons(wkt: string, rowNumber: number): Polygon[] {
     let geoJson: GeoJSON;
     try {
@@ -184,9 +226,10 @@ export class CSVToDB {
       case 'Polygon':
         return [geoJson];
       case 'MultiPolygon':
-        return geoJson.coordinates.map<Polygon>(polygonCoordinates => {
+        const polygonParts = geoJson.coordinates.map<Polygon>(polygonCoordinates => {
           return { type: 'Polygon', coordinates: polygonCoordinates };
         });
+        return this.mergeOverlappingMultiParts(polygonParts);
       default:
         throw new Error('Only MULTIPOLYGON and POLYGON geometry types are supported');
     }

@@ -19,6 +19,9 @@
   },
   "dependencies": {
     "@terraformer/wkt": "^2.2.0",
+    "@turf/boolean-intersects": "^6.5.0",
+    "@turf/flatten": "^6.5.0",
+    "@turf/union": "^6.5.0",
     "config": "^3.3.9",
     "csv": "^6.3.3",
     "pg": "^8.11.3",
