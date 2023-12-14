@@ -1,8 +1,8 @@
 import config from 'config';
 import { readFileSync } from 'fs';
 import pg, { Pool, PoolClient, PoolConfig } from 'pg';
-import { INSERT_POLYGON_PART_FIELDS } from './constants';
-import type { PGConfig, PolygonPartRecord } from './types';
+import { INSERT_PART_FIELDS } from './constants';
+import type { PGConfig, PartRecord } from './types';
 
 export class DBProvider {
   dbConfig: PGConfig;
@@ -62,14 +62,19 @@ export class DBProvider {
     await this.pool.end();
   }
 
-  public async insertPolygon(polygon: PolygonPartRecord,
+  public async insertPart(polygon: PartRecord,
     pgClient: PoolClient): Promise<void> {
-    const insertPolygonPartValues = Object.entries(polygon).map(([key, value]) => {
-      if (INSERT_POLYGON_PART_FIELDS.includes(key)) return value;
+    const insertPartValues = Object.entries(polygon).map(([key, value]) => {
+      if (INSERT_PART_FIELDS.includes(key)) return value;
     });
-    const fieldsPlaceholders = INSERT_POLYGON_PART_FIELDS.map((_, index) => `$${index + 1}`);
-    const query = `CALL \"${this.dbConfig.schema}\".${this.dbConfig.storedProcedure}((${fieldsPlaceholders})::\"${this.dbConfig.schema}\".${this.dbConfig.insertPolygonPartRecord})`;
+    const fieldsPlaceholders = INSERT_PART_FIELDS.map((_, index) => `$${index + 1}`);
+    const query = `CALL \"${this.dbConfig.schema}\".${this.dbConfig.insertPartStoredProcedure}((${fieldsPlaceholders})::\"${this.dbConfig.schema}\".${this.dbConfig.insertPartRecord})`;
 
-    await pgClient.query(query, insertPolygonPartValues);
+    await pgClient.query(query, insertPartValues);
+  }
+
+  public async updatePolygonParts(pgClient: PoolClient): Promise<void> {
+    const query = `CALL \"${this.dbConfig.schema}\".${this.dbConfig.updatePolygonPartsStoredProcedure}()`;
+    await pgClient.query(query);
   }
 }

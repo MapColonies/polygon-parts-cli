@@ -31,7 +31,7 @@ export const REQUIRED_FIELDS = [
 
 export const ALL_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS] as const;
 
-export const INSERT_POLYGON_PART_FIELDS = [
+export const INSERT_PART_FIELDS = [
   'recordId',
   'productId',
   'productName',

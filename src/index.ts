@@ -2,6 +2,7 @@ import yargs, { showHelp } from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { CSVToDB } from './csvToDB';
 import { getErrorMessage } from './utilities';
+import { DBProvider } from './pg';
 
 const argv = yargs(hideBin(process.argv))
   .usage('insert polygon part raw data into db')
@@ -16,8 +17,8 @@ const argv = yargs(hideBin(process.argv))
 
 if (argv.i) {
   const filePath = argv.i;
-
-  const polygonPartsUploader = new CSVToDB(filePath);
+  const dbProvider = new DBProvider(); // TODO: inject
+  const polygonPartsUploader = new CSVToDB(filePath, dbProvider);
 
   (async () => {
     let exitCode: number = 1;

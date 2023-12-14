@@ -9,16 +9,14 @@ import { DatabaseError } from 'pg';
 import { ALL_FIELDS, OPTIONAL_FIELDS, REQUIRED_FIELDS, SUPPORTED_GEO_TYPES, VALIDATION_ERRORS } from './constants';
 import { CSVContentValidationError, CSVHeaderValidationError, DBError } from './error';
 import { DBProvider } from './pg';
-import type { CSVConfig, FieldsRecord, PolygonPartRecord, ProcessingSummary } from './types';
+import type { CSVConfig, FieldsRecord, PartRecord, ProcessingSummary } from './types';
 import { RowValue, isInArray } from './utilities';
 import flatten from '@turf/flatten';
 
 export class CSVToDB {
-  dbProvider: DBProvider;
   csvConfig: CSVConfig;
 
-  constructor(private readonly inputPath: string) {
-    this.dbProvider = new DBProvider(); // TODO: inject
+  constructor(private readonly inputPath: string, private readonly dbProvider: DBProvider) {
     this.csvConfig = config.get<CSVConfig>('csv');
   }
 
@@ -57,7 +55,7 @@ export class CSVToDB {
             const polygonRecord = this.processRow(row, mappedKeys, polygon);
 
             try {
-              await this.dbProvider.insertPolygon(polygonRecord, dbClient);
+              await this.dbProvider.insertPart(polygonRecord, dbClient);
             } catch (err) {
               if (err instanceof DatabaseError)
                 throw new DBError(err.message, rowNumber);
@@ -66,6 +64,12 @@ export class CSVToDB {
             totalPolygonCounter += 1;
           }
         }
+
+        // TODO: perhaps refactor
+        console.log('Calculating polygon parts, this might take a while for large inserts 🤌');
+        await this.dbProvider.updatePolygonParts(dbClient);
+        console.log('Finished calculating polygon parts 💯');
+
         await this.dbProvider.commit(dbClient);
         resolve({
           rowsProcessed: rowNumber,
@@ -74,6 +78,7 @@ export class CSVToDB {
       } catch (err) {
         try {
           await this.dbProvider.rollback(dbClient);
+          console.log('rollbacked changes successfully');
         } catch (err) {
           if (err instanceof DatabaseError)
             throw new DBError(err.message, rowNumber);
@@ -94,7 +99,7 @@ export class CSVToDB {
   private processRow(row: string[], mappedKeys: FieldsRecord, polygon: Polygon) {
     const minHorizontalAccuracyCE90 = this.getValue(row, mappedKeys.minHorizontalAccuracyCE90);
     const maxHorizontalAccuracyCE90 = this.getValue(row, mappedKeys.minHorizontalAccuracyCE90);
-    const polygonPartRecord: PolygonPartRecord = {
+    const polygonPartRecord: PartRecord = {
       recordId: this.getValue(row, mappedKeys.recordId),
       productId: this.getValue(row, mappedKeys.productId),
       productName: this.getValue(row, mappedKeys.productName),

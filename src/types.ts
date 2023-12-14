@@ -13,8 +13,9 @@ export type PGConfig = {
     password: string,
     schema: string,
     table: string,
-    storedProcedure: string,
-    insertPolygonPartRecord: string,
+    insertPartStoredProcedure: string,
+    updatePolygonPartsStoredProcedure: string,
+    insertPartRecord: string,
     sslEnabled: boolean,
     rejectUnauthorized: boolean,
     sslPaths: {
@@ -35,8 +36,8 @@ export type ReuiredFieldsRecord = Record<RequiredField, number>;
 export type OptionalFieldsRecord = Record<OptionalField, number | undefined>;
 export type FieldsRecord = ReuiredFieldsRecord & OptionalFieldsRecord;
 export type PolygonRecordValues = string | number | Polygon | null;
-// export type PolygonRecord = Record<Field, PolygonRecordValues>;
-type PolygonPart = {
+
+type Part = {
     recordId: string,
     productType: string,
     srsName: string,
@@ -58,10 +59,10 @@ type PolygonPart = {
     sensors: string,
     productName: string,
 };
-export type PolygonPartRecord = {
-    [key in RequiredField]: PolygonPart[key];
+export type PartRecord = {
+    [key in RequiredField]: Part[key];
 } & {
-    [key in OptionalField]: PolygonPart[key] | null;
+    [key in OptionalField]: Part[key] | null;
 }
 
 export type ProcessingSummary = {
