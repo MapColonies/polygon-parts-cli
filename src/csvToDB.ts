@@ -1,5 +1,6 @@
 import { wktToGeoJSON } from '@terraformer/wkt';
 import booleanIntersects from '@turf/boolean-intersects';
+import flatten from '@turf/flatten';
 import union from '@turf/union';
 import config from 'config';
 import { parse } from 'csv';
@@ -11,7 +12,6 @@ import { CSVContentValidationError, CSVHeaderValidationError, DBError } from './
 import { DBProvider } from './pg';
 import type { CSVConfig, FieldsRecord, PartRecord, ProcessingSummary } from './types';
 import { RowValue, isInArray } from './utilities';
-import flatten from '@turf/flatten';
 
 export class CSVToDB {
   csvConfig: CSVConfig;
@@ -78,7 +78,7 @@ export class CSVToDB {
       } catch (err) {
         try {
           await this.dbProvider.rollback(dbClient);
-          console.log('rollbacked changes successfully');
+          console.log('Rollbacked changes successfully');
         } catch (err) {
           if (err instanceof DatabaseError)
             throw new DBError(err.message, rowNumber);
