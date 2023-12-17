@@ -35,6 +35,22 @@ Run the following command:
 npm i
 ```
 
+## Configuration
+Set up the following config variables to define DB connection:  
+`DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USER`, `DB_PASSWORD`, `DB_SCHEMA`, `DB_TABLE`, `DB_SSL_ENABLED`, `DB_REJECT_UNAUTHORIZED`, `DB_SSL_CA`, `DB_SSL_KEY`, `DB_SSL_CERT`
+
+Set polygon parts DB resources options:  
+`DB_INSERT_PART_STORED_PROCEDURE`,`DB_UPDATE_POLYGON_PARTS_STORED_PROCEDURE`,`DB_INSERT_PART_RECORD`
+
+Set up pool configuration options:  
+`DB_POOL_MIN`, `DB_POOL_MAX`
+
+Set CSV parsing options:  
+`CSV_DELIMITER`
+
+
+Alternatively, if in development mode you can set up the configurations in the relevant file in the config folder
+
 
 ## Usage
 Run the following command:

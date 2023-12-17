@@ -46,7 +46,7 @@ if (argv.i) {
     console.log('SIGTERM');
     await gracefulShutdown();
   });
-  
+
   process.on('SIGINT', async () => {
     console.log('SIGINT');
     await gracefulShutdown();
@@ -59,15 +59,15 @@ if (argv.i) {
     try {
       console.log(`Start processing file: ${filePath}`); // TODO: replace with @map-colonies/js-logger
       const summary = await polygonPartsUploader.csvToPg();
-      console.log('Processing finished');
-      console.log(`Summary:
+      console.log('Processing finished 🏁');
+      console.log(`Summary 📋:
 Total rows processed: ${summary.rowsProcessed}
 Polygons processed: ${summary.polygonsProcessed}
     `);
       exitCode = 0;
     } catch (err) {
       const errMessage = getErrorMessage(err);
-      console.error(`Processing failed with an error: ${errMessage}`);
+      console.error(`🥴 Processing failed with an error: ${errMessage}`);
     } finally {
       process.exit(exitCode);
     }
