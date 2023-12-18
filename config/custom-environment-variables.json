@@ -10,9 +10,6 @@
         "password": "DB_PASSWORD",
         "schema": "DB_SCHEMA",
         "table": "DB_TABLE",
-        "insertPartStoredProcedure": "DB_INSERT_PART_STORED_PROCEDURE",
-        "updatePolygonPartsStoredProcedure": "DB_UPDATE_POLYGON_PARTS_STORED_PROCEDURE",
-        "insertPartRecord": "DB_INSERT_PART_RECORD",
         "sslEnabled": {
             "__name": "DB_SSL_ENABLED",
             "__format": "boolean"
@@ -26,6 +23,13 @@
             "key": "DB_SSL_KEY",
             "cert": "DB_SSL_CERT"
         },
+        "insertWKTGeometry": {
+            "__name": "DB_INSERT_WKT_GEOMETRY",
+            "__format": "boolean"
+        },
+        "insertPartStoredProcedure": "DB_INSERT_PART_STORED_PROCEDURE",
+        "updatePolygonPartsStoredProcedure": "DB_UPDATE_POLYGON_PARTS_STORED_PROCEDURE",
+        "insertPartRecord": "DB_INSERT_PART_RECORD",
         "pool": {
             "min": {
                 "__name": "DB_POOL_MIN",

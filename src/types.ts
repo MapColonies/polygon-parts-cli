@@ -1,4 +1,4 @@
-import type { Polygon } from 'geojson';
+import type { GeoJSON, Polygon } from 'geojson';
 import { ALL_FIELDS, OPTIONAL_FIELDS, REQUIRED_FIELDS } from './constants';
 
 export type CSVConfig = {
@@ -13,6 +13,7 @@ export type PGConfig = {
     password: string,
     schema: string,
     table: string,
+    insertWKTGeometry: boolean,
     insertPartStoredProcedure: string,
     updatePolygonPartsStoredProcedure: string,
     insertPartRecord: string,
@@ -44,7 +45,7 @@ type Part = {
     maxResolutionMeter: number,
     maxResolutionDeg: number,
     sourceDateEnd: string,
-    geom: Polygon,
+    geom: Polygon | GeoJSON,
     minHorizontalAccuracyCE90: number,
     maxHorizontalAccuracyCE90: number,
     description: string,

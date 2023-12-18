@@ -1,3 +1,4 @@
+import { geojsonToWKT } from '@terraformer/wkt';
 import { readFileSync } from 'fs';
 import pg, { Pool, PoolClient, PoolConfig } from 'pg';
 import { INSERT_PART_FIELDS } from './constants';
@@ -45,9 +46,11 @@ export class DBProvider {
     await this.pool.query(`select pg_cancel_backend(${pid})`);
   }
 
-  public async insertPart(polygon: PartRecord,
-    pgClient: PoolClient): Promise<void> {
+  public async insertPart(polygon: PartRecord, pgClient: PoolClient): Promise<void> {
     const insertPartValues = Object.entries(polygon).map(([key, value]) => {
+      // NOTICE: PostGIS versions prior to 3.0 do not support GeoJSON inserts, the user can change the geom representation to WKT before insertion
+      if (this.dbConfig.insertWKTGeometry && key === 'geom') return `SRID=4326;${geojsonToWKT(polygon.geom)}`;
+
       if (INSERT_PART_FIELDS.includes(key)) return value;
     });
     const fieldsPlaceholders = INSERT_PART_FIELDS.map((_, index) => `$${index + 1}`);

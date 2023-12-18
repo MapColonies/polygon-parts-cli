@@ -7,9 +7,6 @@
     "password": "postgres",
     "schema": "PolygonParts",
     "table": "parts",
-    "insertPartStoredProcedure": "insert_part",
-    "updatePolygonPartsStoredProcedure": "update_polygon_parts",
-    "insertPartRecord": "insert_part_record",
     "sslEnabled": false,
     "rejectUnauthorized": false,
     "sslPaths": {
@@ -17,6 +14,10 @@
       "key": "",
       "cert": ""
     },
+    "insertWKTGeometry": true,
+    "insertPartStoredProcedure": "insert_part",
+    "updatePolygonPartsStoredProcedure": "update_polygon_parts",
+    "insertPartRecord": "insert_part_record",
     "pool": {
       "min": 0,
       "max": 10
