@@ -24,8 +24,8 @@ This basic CLI inserts CSV data into PolygonParts DB
 | sensors | list of sensor name  | - | OGEN_CHAD, WORLDVIEW2|
 | productName | internal name of material | - | |
 | productVersion | product version of the polygon part | - | |
-| sourceDateEnd | will be used also for "start" | + | YYYY-MM-DD hh:mm:ss|
-| maxResolutionDeg | used for min also  | - | float |
+| sourceDateEndUTC | will be used also for "start" | + | YYYY-MM-DD hh:mm:ss|
+| maxResolutionDegree | used for min also  | - | float |
 | region | region / countries  | - |  |
 
 
