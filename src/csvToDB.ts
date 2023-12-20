@@ -92,6 +92,7 @@ export class CSVToDB {
       }
     });
   }
+  
   private getValue<T extends any[], K extends number | undefined>(row: T, field: K): K extends number ? RowValue<T> : null {
     return typeof field === 'number' ? row.at(field) ?? undefined : null;
   }

@@ -43,12 +43,10 @@ if (argv.i) {
   }
 
   process.on('SIGTERM', async () => {
-    console.log('SIGTERM');
     await gracefulShutdown();
   });
 
   process.on('SIGINT', async () => {
-    console.log('SIGINT');
     await gracefulShutdown();
   });
 
