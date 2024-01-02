@@ -10,6 +10,7 @@
         "password": "DB_PASSWORD",
         "schema": "DB_SCHEMA",
         "table": "DB_TABLE",
+        "applicationName": "DB_APPNAME",
         "sslEnabled": {
             "__name": "DB_SSL_ENABLED",
             "__format": "boolean"

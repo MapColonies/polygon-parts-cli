@@ -13,6 +13,7 @@ export type PGConfig = {
     password: string,
     schema: string,
     table: string,
+    applicationName?: string
     insertGeometryAsWKT: boolean,
     insertPartStoredProcedure: string,
     updatePolygonPartsStoredProcedure: string,

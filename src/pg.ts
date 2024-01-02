@@ -71,6 +71,7 @@ export class DBProvider {
       user: dbConfig.user,
       database: dbConfig.database,
       password: dbConfig.password,
+      application_name: dbConfig.applicationName
     };
 
     if (dbConfig.sslEnabled) {

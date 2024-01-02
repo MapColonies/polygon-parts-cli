@@ -1,6 +1,7 @@
 import config from 'config';
 import yargs, { showHelp } from 'yargs';
 import { hideBin } from 'yargs/helpers';
+import { name as packageName, version as packageVersion } from '../package.json';
 import { CSVToDB } from './csvToDB';
 import { DBProvider } from './pg';
 import type { PGConfig } from './types';
@@ -13,7 +14,7 @@ const argv = yargs(hideBin(process.argv))
     describe: 'input file (csv)',
     type: 'string'
   })
-  .version(require('../package.json').version)
+  .version(packageVersion)
   .help(true)
   .parseSync();
 
@@ -21,8 +22,9 @@ if (argv.i) {
   const filePath = argv.i;
 
   const dbConfig = config.get<PGConfig>('pgConfig');
-  const adminProvider = new DBProvider({ ...dbConfig, ...{ pool: { min: 0, max: 1 } } });
-  const dbProvider = new DBProvider(dbConfig); // TODO: inject
+  const applicationName = dbConfig.applicationName ?? packageName;
+  const adminProvider = new DBProvider({ ...dbConfig, ...{ applicationName: `${applicationName}-admin`, pool: { min: 0, max: 1 } } });
+  const dbProvider = new DBProvider({ ...dbConfig, ...{ applicationName: applicationName } }); // TODO: inject
 
   let shutdown = true;
 
