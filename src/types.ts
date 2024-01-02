@@ -13,7 +13,7 @@ export type PGConfig = {
     password: string,
     schema: string,
     table: string,
-    insertWKTGeometry: boolean,
+    insertGeometryAsWKT: boolean,
     insertPartStoredProcedure: string,
     updatePolygonPartsStoredProcedure: string,
     insertPartRecord: string,
@@ -33,9 +33,9 @@ export type PGConfig = {
 export type RequiredField = typeof REQUIRED_FIELDS[number];
 export type OptionalField = typeof OPTIONAL_FIELDS[number];
 export type Field = typeof ALL_FIELDS[number];
-export type ReuiredFieldsRecord = Record<RequiredField, number>;
+type ReuiredFieldsRecord = Record<RequiredField, number>;
 export type OptionalFieldsRecord = Record<OptionalField, number | undefined>;
-export type FieldsRecord = ReuiredFieldsRecord & OptionalFieldsRecord;
+export type FieldsMapping = ReuiredFieldsRecord & OptionalFieldsRecord;
 export type PolygonRecordValues = string | number | Polygon | null;
 
 type Part = {
@@ -60,13 +60,19 @@ type Part = {
     sensors: string,
     productName: string,
 };
-export type PartRecord = {
+
+export type RequiredPartField = {
     [key in RequiredField]: Part[key];
-} & {
+};
+export type OptionalPartField = {
     [key in OptionalField]: Part[key] | null;
-}
+};
+export type PartRecord = RequiredPartField & OptionalPartField;
 
 export type ProcessingSummary = {
     rowsProcessed: number,
     polygonsProcessed: number,
 };
+
+export type RowValue<T, K> = T extends Array<infer U> ? U : K;
+export type ExtractItem<T, K, L> = K extends undefined ? null : RowValue<T, L>;

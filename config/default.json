@@ -14,7 +14,7 @@
       "key": "",
       "cert": ""
     },
-    "insertWKTGeometry": true,
+    "insertGeometryAsWKT": true,
     "insertPartStoredProcedure": "insert_part",
     "updatePolygonPartsStoredProcedure": "update_polygon_parts",
     "insertPartRecord": "insert_part_record",

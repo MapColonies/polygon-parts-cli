@@ -23,8 +23,8 @@
             "key": "DB_SSL_KEY",
             "cert": "DB_SSL_CERT"
         },
-        "insertWKTGeometry": {
-            "__name": "DB_INSERT_WKT_GEOMETRY",
+        "insertGeometryAsWKT": {
+            "__name": "DB_INSERT_GEOMETRY_AS_WKT",
             "__format": "boolean"
         },
         "insertPartStoredProcedure": "DB_INSERT_PART_STORED_PROCEDURE",

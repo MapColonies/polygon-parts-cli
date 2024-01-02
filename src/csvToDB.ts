@@ -10,8 +10,8 @@ import { DatabaseError } from 'pg';
 import { ALL_FIELDS, OPTIONAL_FIELDS, REQUIRED_FIELDS, SUPPORTED_GEO_TYPES, VALIDATION_ERRORS } from './constants';
 import { CSVContentValidationError, CSVHeaderValidationError, DBError } from './error';
 import { DBProvider } from './pg';
-import type { CSVConfig, FieldsRecord, PartRecord, ProcessingSummary } from './types';
-import { RowValue, isInArray } from './utilities';
+import type { CSVConfig, FieldsMapping, PartRecord, ProcessingSummary } from './types';
+import { getValue, isInArray } from './utilities';
 
 export class CSVToDB {
   csvConfig: CSVConfig;
@@ -29,7 +29,7 @@ export class CSVToDB {
     return this.processContent(mappedKeys);
   }
 
-  private async processContent(mappedKeys: FieldsRecord): Promise<ProcessingSummary> {
+  private async processContent(mappedKeys: FieldsMapping): Promise<ProcessingSummary> {
     const dbClient = await this.dbProvider.connectToDb();
     let rowNumber = 0, totalPolygonCounter = 0;
 
@@ -46,7 +46,7 @@ export class CSVToDB {
           rowNumber += 1;
 
           this.validateContent(row, mappedKeys, rowNumber);
-          const polygons = this.getPolygons(this.getValue(row, mappedKeys.geom), rowNumber);
+          const polygons = this.getPolygons(getValue(row, mappedKeys.geom), rowNumber);
 
           let polygonCounter = 0;
           for (const polygon of polygons) {
@@ -92,35 +92,32 @@ export class CSVToDB {
       }
     });
   }
-  
-  private getValue<T extends any[], K extends number | undefined>(row: T, field: K): K extends number ? RowValue<T> : null {
-    return typeof field === 'number' ? row.at(field) ?? undefined : null;
-  }
 
-  private processRow(row: string[], mappedKeys: FieldsRecord, polygon: Polygon) {
-    const minHorizontalAccuracyCE90 = this.getValue(row, mappedKeys.minHorizontalAccuracyCE90);
-    const maxHorizontalAccuracyCE90 = this.getValue(row, mappedKeys.minHorizontalAccuracyCE90);
+  private processRow(row: string[], mappedKeys: FieldsMapping, polygon: Polygon) {
+    const minHorizontalAccuracyCE90 = getValue(row, mappedKeys.minHorizontalAccuracyCE90);
+    const maxHorizontalAccuracyCE90 = getValue(row, mappedKeys.minHorizontalAccuracyCE90);
+
     const polygonPartRecord: PartRecord = {
-      recordId: this.getValue(row, mappedKeys.recordId),
-      productId: this.getValue(row, mappedKeys.productId),
-      productName: this.getValue(row, mappedKeys.productName),
-      productVersion: this.getValue(row, mappedKeys.productVersion),
-      sourceDateStartUTC: this.getValue(row, mappedKeys.sourceDateEndUTC),
-      sourceDateEndUTC: this.getValue(row, mappedKeys.sourceDateEndUTC),
-      minResolutionDegree: parseFloat(this.getValue(row, mappedKeys.maxResolutionDegree)),
-      maxResolutionDegree: parseFloat(this.getValue(row, mappedKeys.maxResolutionDegree)),
-      minResolutionMeter: parseFloat(this.getValue(row, mappedKeys.maxResolutionMeter)),
-      maxResolutionMeter: parseFloat(this.getValue(row, mappedKeys.maxResolutionMeter)),
+      recordId: getValue(row, mappedKeys.recordId),
+      productId: getValue(row, mappedKeys.productId),
+      productName: getValue(row, mappedKeys.productName),
+      productVersion: getValue(row, mappedKeys.productVersion),
+      sourceDateStartUTC: getValue(row, mappedKeys.sourceDateEndUTC),
+      sourceDateEndUTC: getValue(row, mappedKeys.sourceDateEndUTC),
+      minResolutionDegree: parseFloat(getValue(row, mappedKeys.maxResolutionDegree)),
+      maxResolutionDegree: parseFloat(getValue(row, mappedKeys.maxResolutionDegree)),
+      minResolutionMeter: parseFloat(getValue(row, mappedKeys.maxResolutionMeter)),
+      maxResolutionMeter: parseFloat(getValue(row, mappedKeys.maxResolutionMeter)),
       minHorizontalAccuracyCE90: minHorizontalAccuracyCE90 === null ? minHorizontalAccuracyCE90 : parseFloat(minHorizontalAccuracyCE90),
       maxHorizontalAccuracyCE90: maxHorizontalAccuracyCE90 === null ? maxHorizontalAccuracyCE90 : parseFloat(maxHorizontalAccuracyCE90),
-      sensors: this.getValue(row, mappedKeys.sensors),
-      region: this.getValue(row, mappedKeys.region),
-      classification: this.getValue(row, mappedKeys.classification),
-      description: this.getValue(row, mappedKeys.description),
+      sensors: getValue(row, mappedKeys.sensors),
+      region: getValue(row, mappedKeys.region),
+      classification: getValue(row, mappedKeys.classification),
+      description: getValue(row, mappedKeys.description),
       geom: polygon,
-      imageName: this.getValue(row, mappedKeys.imageName),
-      productType: this.getValue(row, mappedKeys.productType),
-      srsName: this.getValue(row, mappedKeys.srsName),
+      imageName: getValue(row, mappedKeys.imageName),
+      productType: getValue(row, mappedKeys.productType),
+      srsName: getValue(row, mappedKeys.srsName),
     };
 
     // replace empty string values with nulls for optional fields
@@ -132,9 +129,9 @@ export class CSVToDB {
   }
 
   // maps CSV columns to numeral values so the column order is not important
-  private async mapColumnsToKeys(): Promise<Partial<FieldsRecord>> {
+  private async mapColumnsToKeys(): Promise<Partial<FieldsMapping>> {
     return new Promise((resolve, reject) => {
-      let headers: Partial<FieldsRecord> = {};
+      let headers: Partial<FieldsMapping> = {};
 
       // TODO: refactor like above
       createReadStream(this.inputPath)
@@ -158,7 +155,7 @@ export class CSVToDB {
     });
   }
 
-  private validateHeaders(headers: Partial<FieldsRecord>): headers is FieldsRecord {
+  private validateHeaders(headers: Partial<FieldsMapping>): headers is FieldsMapping {
     const keys = Object.keys(headers);
 
     const missingHeaders = REQUIRED_FIELDS.filter(requiredField => !keys.includes(requiredField));
@@ -167,9 +164,8 @@ export class CSVToDB {
     return true;
   }
 
-  private validateContent(row: string[], mappedKeys: FieldsRecord, rowNumber: number): void {
+  private validateContent(row: string[], mappedKeys: FieldsMapping, rowNumber: number): void {
     for (const field of REQUIRED_FIELDS) {
-      this.getValue(row, mappedKeys[field])
       if (!row[mappedKeys[field]])
         throw new CSVContentValidationError(field, VALIDATION_ERRORS.mandatoryField, rowNumber, undefined);
     }
@@ -181,22 +177,17 @@ export class CSVToDB {
   }
 
   private mergeOverlappingMultiParts(polygons: Polygon[]): Polygon[] {
-    let i = 0, j;
-
     const uniqueOverlappingPartsIndices = new Set<number>();
 
-    while (polygons[i]) {
-      j = i + 1;
-      while (polygons[j]) {
+    for (let i = 0; i < polygons.length; i++) {
+      for (let j = i + 1; j < polygons.length; j++) {
         if (booleanIntersects(polygons[i], polygons[j])) {
           uniqueOverlappingPartsIndices.add(i);
           uniqueOverlappingPartsIndices.add(j);
         }
-        j++;
       }
-      i++;
     }
-    
+
     const overlappingPartsIndices = Array.from(uniqueOverlappingPartsIndices);
     if (overlappingPartsIndices.length === 0) return polygons;
 

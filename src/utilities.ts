@@ -1,3 +1,5 @@
+import type { ExtractItem } from "./types";
+
 export const getErrorMessage = (err: unknown): string => {
     let message: string | undefined;
     if (err instanceof Error) message = err.message;
@@ -10,4 +12,12 @@ export const isInArray = <T extends string>(value: string, array: Readonly<Array
     return !!array.find(item => item === value);
 }
 
-export type RowValue<T> = T extends Array<infer U> ? U : never;
+export const getValue = <T extends any[], K extends number | undefined>(row: T, field: K): ExtractItem<T, K, null> => {
+    let value: any | null;
+    if (field === undefined)
+        value = null;
+    else
+        value = row.at(field);
+    if (!value) throw new RangeError('Field was not found in the row');
+    return value;
+}

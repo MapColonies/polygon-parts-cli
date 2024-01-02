@@ -40,7 +40,7 @@ Set up the following config variables to define DB connection:
 `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USER`, `DB_PASSWORD`, `DB_SCHEMA`, `DB_TABLE`, `DB_SSL_ENABLED`, `DB_REJECT_UNAUTHORIZED`, `DB_SSL_CA`, `DB_SSL_KEY`, `DB_SSL_CERT`
 
 Set for geometry field insertion type support:  
-`DB_INSERT_WKT_GEOMETRY`
+`DB_INSERT_GEOMETRY_AS_WKT`
 
 Set polygon parts DB resources options:  
 `DB_INSERT_PART_STORED_PROCEDURE`,`DB_UPDATE_POLYGON_PARTS_STORED_PROCEDURE`,`DB_INSERT_PART_RECORD`
