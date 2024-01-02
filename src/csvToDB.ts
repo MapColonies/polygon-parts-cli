@@ -9,7 +9,7 @@ import type { Feature, GeoJSON, GeoJsonProperties, MultiPolygon, Polygon } from 
 import { DatabaseError } from 'pg';
 import { ALL_FIELDS, OPTIONAL_FIELDS, REQUIRED_FIELDS, SUPPORTED_GEO_TYPES, VALIDATION_ERRORS } from './constants';
 import { CSVContentValidationError, CSVHeaderValidationError, DBError } from './error';
-import { DBProvider } from './pg';
+import type { DBProvider } from './pg';
 import type { CSVConfig, FieldsMapping, PartRecord, ProcessingSummary } from './types';
 import { getValue, isInArray } from './utilities';
 

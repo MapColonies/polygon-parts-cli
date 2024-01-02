@@ -3,7 +3,7 @@ import yargs, { showHelp } from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { CSVToDB } from './csvToDB';
 import { DBProvider } from './pg';
-import { PGConfig } from './types';
+import type { PGConfig } from './types';
 import { getErrorMessage } from './utilities';
 
 const argv = yargs(hideBin(process.argv))

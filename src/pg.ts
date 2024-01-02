@@ -1,6 +1,7 @@
 import { geojsonToWKT } from '@terraformer/wkt';
 import { readFileSync } from 'fs';
-import pg, { Pool, PoolClient, PoolConfig } from 'pg';
+import type { PoolClient, PoolConfig } from 'pg';
+import pg, { Pool } from 'pg';
 import { INSERT_PART_FIELDS } from './constants';
 import type { PGConfig, PartRecord } from './types';
 
