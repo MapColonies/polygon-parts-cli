@@ -95,18 +95,18 @@ export class CSVToDB {
 
   private processRow(row: string[], mappedKeys: FieldsMapping, polygon: Polygon) {
     const minHorizontalAccuracyCE90 = getValue(row, mappedKeys.minHorizontalAccuracyCE90);
-    const maxHorizontalAccuracyCE90 = getValue(row, mappedKeys.minHorizontalAccuracyCE90);
+    const maxHorizontalAccuracyCE90 = getValue(row, mappedKeys.maxHorizontalAccuracyCE90 ?? mappedKeys.minHorizontalAccuracyCE90);
 
     const polygonPartRecord: PartRecord = {
       recordId: getValue(row, mappedKeys.recordId),
       productId: getValue(row, mappedKeys.productId),
       productName: getValue(row, mappedKeys.productName),
       productVersion: getValue(row, mappedKeys.productVersion),
-      sourceDateStartUTC: getValue(row, mappedKeys.sourceDateEndUTC),
+      sourceDateStartUTC: getValue(row, mappedKeys.sourceDateStartUTC ?? mappedKeys.sourceDateEndUTC),
       sourceDateEndUTC: getValue(row, mappedKeys.sourceDateEndUTC),
-      minResolutionDegree: parseFloat(getValue(row, mappedKeys.maxResolutionDegree)),
+      minResolutionDegree: parseFloat(getValue(row, mappedKeys.minResolutionDegree ?? mappedKeys.maxResolutionDegree)),
       maxResolutionDegree: parseFloat(getValue(row, mappedKeys.maxResolutionDegree)),
-      minResolutionMeter: parseFloat(getValue(row, mappedKeys.maxResolutionMeter)),
+      minResolutionMeter: parseFloat(getValue(row, mappedKeys.minResolutionMeter ?? mappedKeys.maxResolutionMeter)),
       maxResolutionMeter: parseFloat(getValue(row, mappedKeys.maxResolutionMeter)),
       minHorizontalAccuracyCE90: minHorizontalAccuracyCE90 === null ? minHorizontalAccuracyCE90 : parseFloat(minHorizontalAccuracyCE90),
       maxHorizontalAccuracyCE90: maxHorizontalAccuracyCE90 === null ? maxHorizontalAccuracyCE90 : parseFloat(maxHorizontalAccuracyCE90),
