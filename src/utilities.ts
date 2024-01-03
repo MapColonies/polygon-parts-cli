@@ -18,6 +18,6 @@ export const getValue = <T extends any[], K extends number | undefined>(row: T, 
         value = null;
     else
         value = row.at(field);
-    if (!value) throw new RangeError('Field was not found in the row');
+    if (value === undefined) throw new RangeError('Field was not found in the row');
     return value;
 }

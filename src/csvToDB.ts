@@ -122,7 +122,7 @@ export class CSVToDB {
 
     // replace empty string values with nulls for optional fields
     Object.entries(polygonPartRecord).forEach(([key, value]) => {
-      if (isInArray(key, OPTIONAL_FIELDS) && value === '') polygonPartRecord[key] = null
+      if (isInArray(key, OPTIONAL_FIELDS) && value === '') polygonPartRecord[key] = null;
     });
 
     return polygonPartRecord;
