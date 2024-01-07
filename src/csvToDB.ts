@@ -45,7 +45,7 @@ export class CSVToDB {
         for await (row of readStream) {
           rowNumber += 1;
 
-          this.validateContent(row, mappedKeys, rowNumber);
+          this.validateRow(row, mappedKeys, rowNumber);
           const polygons = this.getPolygons(getValue(row, mappedKeys.geom), rowNumber);
 
           let polygonCounter = 0;
@@ -164,7 +164,7 @@ export class CSVToDB {
     return true;
   }
 
-  private validateContent(row: string[], mappedKeys: FieldsMapping, rowNumber: number): void {
+  private validateRow(row: string[], mappedKeys: FieldsMapping, rowNumber: number): void {
     for (const field of REQUIRED_FIELDS) {
       if (!row[mappedKeys[field]])
         throw new CSVContentValidationError(field, VALIDATION_ERRORS.mandatoryField, rowNumber, undefined);
