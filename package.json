@@ -1,19 +1,41 @@
 {
   "name": "polygon-parts-cli",
-  "version": "1.0.0",
-  "description": "This CLI utility will parse and upload csv parts data into wfs db (pg)",
-  "main": "src/index.js",
+  "version": "1.1.0",
+  "description": "This CLI utility will parse and upload CSV parts data into wfs db (pg)",
+  "main": "src/index.ts",
   "scripts": {
-    "start": "node ./src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prebuild": "npm run clean",
+    "build": "tsc --project tsconfig.build.json && npm run assets:copy",
+    "start": "npm run build && cd dist && node ./index.js",
+    "start:dev": "npm run build && cd dist && node --enable-source-maps ./index.js",
+    "assets:copy": "copyfiles -f ./config/* ./dist/config && copyfiles ./package.json dist",
+    "clean": "rimraf dist"
   },
-  "author": "",
+  "author": "MapColonies",
   "license": "ISC",
+  "engines": {
+    "node": ">=18.17.0"
+  },
   "dependencies": {
+    "@terraformer/wkt": "^2.2.0",
+    "@turf/boolean-intersects": "^6.5.0",
+    "@turf/flatten": "^6.5.0",
+    "@turf/union": "^6.5.0",
     "config": "^3.3.9",
     "csv": "^6.3.3",
     "pg": "^8.11.3",
-    "wellknown": "^0.5.0",
     "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/config": "^3.3.2",
+    "@types/geojson": "^7946.0.13",
+    "@types/node": "^20.8.10",
+    "@types/pg": "^8.10.7",
+    "@types/terraformer__wkt": "^2.0.2",
+    "@types/yargs": "^17.0.29",
+    "copyfiles": "^2.4.1",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.2.2"
   }
 }
