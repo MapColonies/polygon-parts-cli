@@ -1,67 +1,75 @@
 # polygon-parts-cli
-This basic CLI inserts CSV data into PolygonParts DB
 
+This basic CLI inserts CSV data into PolygonParts DB using polygonPartsManger service
 
 ## Prerequisites
-1. Node.js 
-2. Suitable CSV data file as will be explained on next section
-3. PostGIS instance with a suited DB schema
 
+1. Node.js
+2. Suitable CSV data file as will be explained on next section
+3. Deployed polygonPartsManager
+   UpdateDate,SensorType,Resolution,Ep90,Dsc,Countries,ResolutionDegree,ResolutionMeter,Cities
 
 ## CSV structure
-| Field | What is it    | Mandatory   | possible values\examples |
-| :---:   | :---: | :---: | :---: |
-| geom | WKT geometry of feature, may be `MULTIPOLYGON` or `POLYGON`   | +  | |
-| recordId | Catalog ID of original layer   | +   | will be UUID |
-| productId | Name of Parts source   | -   | |
-| classification | Level of classification provided   | +   | Unclassified, Confidential, Secret, TopSecret | 
-| productType | discrete type   | +   | Orthophoto, OrthophotoHistory, OrthophotoBest, RasterMap, RasterMapBest, RasterAid, RasterAidBest, RasterVector, RasterVectorBest| 
-| srsName | On default `GCS_WGS_1984`   | - <br/> (Not in use)   | GCS_WGS_1984 |
-| description | free text of information   | - |  |
-| imageName | original image name   | - |  |
-| minHorizontalAccuracyCE90 |   | - | float |
-| maxResolutionMeter | used for min also  | - | float |
-| sensors | list of sensor name  | - | OGEN_CHAD, WORLDVIEW2|
-| productName | internal name of material | - | |
-| productVersion | product version of the polygon part | - | |
-| sourceDateEndUTC | will be used also for "start" | + | YYYY-MM-DD hh:mm:ss|
-| maxResolutionDegree | used for min also  | - | float |
-| region | region / countries  | - |  |
 
+This csv is made manually by out PM.
+This fields were defined by the `Sinergia System` to enable easy one time insert of already ingested layers.
+
+|      Field       |            What is it             | Mandatory |       polygonParts Field Mapping       |
+| :--------------: | :-------------------------------: | :-------: | :------------------------------------: |
+|      Source      |        The sourceId value         |     +     |                sourceId                |
+|    SourceName    |            source name            |     +     |               sourceName               |
+|       WKT        | WKT of the layer. must be POLYGON |     +     |               footprint                |
+|    UpdateDate    |    Date. In format DD/MM/YYYY     |     +     | imagingTimeBeginUTC, imagingTimeEndUTC |
+|    SensorType    |          list of sensors          |     +     |                 OTHER                  |
+|    Resolution    |         source resolution         |     +     |         sourceResolutionMeter          |
+|       Ep90       |     part horizontal accuracy      |     +     |         horizontalAccuracyCE90         |
+|    Countries     |         list of countries         |     +     |               countries                |
+| ResolutionDegree |         used for min also         |     +     |            resolutionDegree            |
+| ResolutionMeter  |        list of sensor name        |     +     |            resolutionMeter             |
+|      Cities      |          list of cities           |     -     |                 cities                 |
+|       Dsc        |            description            |     -     |              description               |
 
 ## Installation
+
 Run the following command:
+
 ```
 npm i
 ```
 
-## Configuration
-Set up the following config variables to define DB connection:  
-`DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USER`, `DB_PASSWORD`, `DB_SCHEMA`, `DB_TABLE`, `DB_SSL_ENABLED`, `DB_REJECT_UNAUTHORIZED`, `DB_SSL_CA`, `DB_SSL_KEY`, `DB_SSL_CERT`
+## Input Flags
 
-Set for geometry field insertion type support:  
-`DB_INSERT_GEOMETRY_AS_WKT`
+| flag | value                           |
+| ---- | ------------------------------- |
+| -s   | polygonPartsManager service url |
+| -i   | csv file name                   |
+| -p   | productId                       |
+| -c   | catalogId                       |
+| -v   | productVersion                  |
+| -t   | productType                     |
 
-Set polygon parts DB resources options:  
-`DB_INSERT_PART_STORED_PROCEDURE`,`DB_UPDATE_POLYGON_PARTS_STORED_PROCEDURE`,`DB_INSERT_PART_RECORD`
-
-Set up pool configuration options:  
-`DB_POOL_MIN`, `DB_POOL_MAX`
-
-Set CSV parsing options:  
-`CSV_DELIMITER`
-
-
-Alternatively, if in development mode you can set up the configurations in the relevant file in the config folder
-
+**Note** productType must be one of: 'Orthophoto',
+'OrthophotoHistory',
+'OrthophotoBest',
+'RasterMap',
+'RasterMapBest',
+'RasterAid',
+'RasterAidBest',
+'RasterVector',
+'RasterVectorBest',
 
 ## Usage
-Run the following command:
+
+Run the following command when running locally:
+
 ```
-npm run start:dev -i path/to/data.csv
+npm run start -- -s polygonPartsServiceUrl-i path/to/data.csv -p productID -c catalogId -v productVersion -t productType
 ```
 
-or
+Run the following command when running the docker locally :
+
+--network=host is used when reffering to a polygonPartManager service that runs locally.
+
 ```
-npm run start -i path/to/data.csv
+docker run --network=host --rm -v /path/to/csv/file/locally:/usr/src/app/sample_data docker_image:docker_tag -s=http://localhost:8081 -i ./sample_data/israel.csv -p some_product_id -c some_catalog_id -v version -t product_type
 ```
