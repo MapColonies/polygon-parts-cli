@@ -1,5 +1,4 @@
 import type {
-  PolygonPart,
   PolygonPartsPayload as PolygonPartsPayloadType,
   ProductType as ProductTypeEnum,
 } from "@map-colonies/mc-model-types";
