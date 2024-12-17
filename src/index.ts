@@ -1,79 +1,77 @@
-import config from 'config';
-import yargs, { showHelp } from 'yargs';
-import { hideBin } from 'yargs/helpers';
-import { name as packageName, version as packageVersion } from '../package.json';
-import { CSVToDB } from './csvToDB';
-import { DBProvider } from './pg';
-import type { PGConfig } from './types';
-import { getErrorMessage } from './utilities';
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import { PolygonPartsManagerClient } from "./polygonPartsClient";
+import { CSVToRequest } from "./csvToRequest";
 
 const argv = yargs(hideBin(process.argv))
-  .usage('insert polygon part raw data into db')
-  .option('i', {
-    alias: 'input',
-    describe: 'input file (csv)',
-    type: 'string'
+  .usage("insert request to polygon parts service")
+  .option("s", {
+    alias: "polygon_parts_service",
+    describe: "polygon_parts_service",
+    type: "string",
   })
-  .version(packageVersion)
+  .option("i", {
+    alias: "input",
+    describe: "input file (csv)",
+    type: "string",
+  })
+  .option("i", {
+    alias: "input",
+    describe: "input file (csv)",
+    type: "string",
+  })
+  .option("p", {
+    alias: "product_id",
+    describe: "product_id",
+    type: "string",
+  })
+  .option("c", {
+    //uuid
+    alias: "catalog_id",
+    describe: "catalog_id",
+    type: "string",
+  })
+  .option("t", {
+    // add closed options list
+    alias: "product_type",
+    describe: "product_type",
+    type: "string",
+  })
+  .option("v", {
+    alias: "product_version",
+    describe: "product version",
+    type: "string",
+  })
   .help(true)
   .parseSync();
 
-if (argv.i) {
-  const filePath = argv.i;
+console.log(argv);
 
-  const dbConfig = config.get<PGConfig>('pgConfig');
-  const applicationName = dbConfig.applicationName ?? packageName;
-  const adminProvider = new DBProvider({ ...dbConfig, ...{ applicationName: `${applicationName}-admin`, pool: { min: 0, max: 1 } } });
-  const dbProvider = new DBProvider({ ...dbConfig, ...{ applicationName: applicationName } }); // TODO: inject
-
-  let shutdown = true;
-
-  // https://github.com/brianc/node-postgres/issues/773
-  // to cleanup pg resources an admin client terminating ongoing queries is currently the only option
-  // this may require setting additional access to the user - https://www.postgresql.org/docs/12/functions-admin.html#FUNCTIONS-ADMIN-SIGNAL
-  const gracefulShutdown = async () => {
-    if (shutdown) {
-      shutdown = false;
-      try {
-        if (dbProvider.backendPID)
-          await adminProvider.cancel(dbProvider.backendPID);
-      } catch (err) {
-        const errMessage = getErrorMessage(err);
-        console.error(`Failed to cleanup DB resources: ${errMessage}`);
-      }
+// Example usage
+(async () => {
+  try {
+    if (argv.i && argv.p && argv.c && argv.t && argv.v && argv.s) {
+      const filePath = argv.i;
+      const productId = argv.p;
+      const catalogId = argv.c;
+      const productType = argv.t;
+      const productVersion = argv.v;
+      const polygonPartsServiceUrl = argv.s;
+      const polygonPartsManager = new PolygonPartsManagerClient(
+        polygonPartsServiceUrl,
+      );
+      const CSVToRequestParser = new CSVToRequest(
+        filePath,
+        catalogId,
+        productId,
+        productType,
+        productVersion,
+      );
+      const request = await CSVToRequestParser.createRequest();
+      await polygonPartsManager.insert(request);
+      ///console.log(JSON.stringify(transformedData, null, 2));
     }
+  } catch (error) {
+    console.error("Error inserting to polygonPartsManager:", error);
   }
-
-  process.on('SIGTERM', async () => {
-    await gracefulShutdown();
-  });
-
-  process.on('SIGINT', async () => {
-    await gracefulShutdown();
-  });
-
-  const polygonPartsUploader = new CSVToDB(filePath, dbProvider);
-
-  (async () => {
-    let exitCode: number = 1;
-    try {
-      console.log(`Start processing file 🎬: ${filePath}`); // TODO: replace with @map-colonies/js-logger
-      const summary = await polygonPartsUploader.csvToPg();
-      console.log('Processing finished 🏁');
-      console.log(`Summary 📋:
-Total rows processed: ${summary.rowsProcessed}
-Polygons processed: ${summary.polygonsProcessed}
-    `);
-      exitCode = 0;
-    } catch (err) {
-      const errMessage = getErrorMessage(err);
-      console.error(`🥴 Processing failed with an error: ${errMessage}`);
-    } finally {
-      process.exit(exitCode);
-    }
-  })();
-}
-
-else {
-  showHelp();
-}
+})();
