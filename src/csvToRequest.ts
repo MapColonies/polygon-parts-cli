@@ -4,6 +4,13 @@ import csvParser from "csv-parser";
 import { PolygonPart } from "@map-colonies/mc-model-types";
 import { Polygon } from "geojson";
 import { CSVRow, PolygonPartsPayload, ProductType } from "./interfaces";
+import {
+  zoomToResolutionDegMapper,
+  zoomToResolutionMeterMapper,
+} from "./constants";
+
+type ZoomLevelResult = { resolutionDegree: number; resolutionMeter: number };
+
 export class CSVToRequest {
   private readonly filePath: string;
   private readonly catalogId: string;
@@ -46,11 +53,14 @@ export class CSVToRequest {
         .pipe(csvParser())
         .on("data", (row: CSVRow) => {
           try {
+            const resolutions = this.findZoomLevelAndResolution(
+              +row.Resolution,
+            );
             results.push({
               sourceId: row.Source,
               sourceName: row.SourceName,
-              resolutionDegree: +row.ResolutionDegree,
-              resolutionMeter: +row.ResolutionMeter,
+              resolutionDegree: resolutions.resolutionDegree,
+              resolutionMeter: resolutions.resolutionMeter,
               sourceResolutionMeter: +row.Resolution,
               horizontalAccuracyCE90: +row.Ep90,
               sensors: row.SensorType.split(",").map((sensor) => sensor.trim()),
@@ -70,5 +80,16 @@ export class CSVToRequest {
         .on("end", () => resolve(results))
         .on("error", (error) => reject(error));
     });
+  }
+
+  private findZoomLevelAndResolution(resolution: number): ZoomLevelResult {
+    for (let zoomLevel = 22; zoomLevel >= 0; zoomLevel--) {
+      if (zoomToResolutionMeterMapper[zoomLevel] >= resolution) {
+        const resolutionMeter = zoomToResolutionMeterMapper[zoomLevel];
+        const resolutionDegree = zoomToResolutionDegMapper[zoomLevel];
+        return { resolutionDegree, resolutionMeter };
+      }
+    }
+    throw Error(`Cant find ${resolution} in ResolutionMeterBuffer`);
   }
 }
