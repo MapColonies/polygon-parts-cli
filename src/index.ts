@@ -15,11 +15,6 @@ const argv = yargs(hideBin(process.argv))
     describe: "input file (csv)",
     type: "string",
   })
-  .option("i", {
-    alias: "input",
-    describe: "input file (csv)",
-    type: "string",
-  })
   .option("p", {
     alias: "product_id",
     describe: "product_id",
@@ -42,6 +37,12 @@ const argv = yargs(hideBin(process.argv))
     describe: "product version",
     type: "string",
   })
+  .option("calc_res", {
+    alias: "calculate_resolution",
+    describe: "calculate resolution from source",
+    type: "boolean",
+    default: false,
+  })
   .help(true)
   .parseSync();
 
@@ -57,6 +58,7 @@ console.log(argv);
       const productType = argv.t;
       const productVersion = argv.v;
       const polygonPartsServiceUrl = argv.s;
+      const calc_res = argv.calc_res;
       const polygonPartsManager = new PolygonPartsManagerClient(
         polygonPartsServiceUrl,
       );
@@ -66,6 +68,7 @@ console.log(argv);
         productId,
         productType,
         productVersion,
+        calc_res,
       );
       const request = await CSVToRequestParser.createRequest();
       await polygonPartsManager.insert(request);

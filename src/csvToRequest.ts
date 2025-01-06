@@ -17,6 +17,7 @@ export class CSVToRequest {
   private readonly productId: string;
   private readonly productType: string;
   private readonly productVersion: string;
+  private readonly calcRes: boolean;
 
   public constructor(
     filePath: string,
@@ -24,12 +25,14 @@ export class CSVToRequest {
     productId: string,
     productType: string,
     productVersion: string,
+    calcRes: boolean,
   ) {
     this.filePath = filePath;
     this.catalogId = catalogId;
     this.productId = productId;
     this.productType = productType;
     this.productVersion = productVersion;
+    this.calcRes = calcRes;
   }
 
   public async createRequest(): Promise<PolygonPartsPayload> {
@@ -53,14 +56,24 @@ export class CSVToRequest {
         .pipe(csvParser())
         .on("data", (row: CSVRow) => {
           try {
-            const resolutions = this.findZoomLevelAndResolution(
-              +row.Resolution,
-            );
+            let resolutionDegree: number;
+            let resolutionMeter: number;
+
+            if (this.calcRes) {
+              const resolutions = this.findZoomLevelAndResolution(
+                +row.Resolution,
+              );
+              resolutionDegree = resolutions.resolutionDegree;
+              resolutionMeter = resolutions.resolutionMeter;
+            } else {
+              resolutionDegree = +row.ResolutionDegree;
+              resolutionMeter = +row.ResolutionMeter;
+            }
             results.push({
               sourceId: row.Source,
               sourceName: row.SourceName,
-              resolutionDegree: resolutions.resolutionDegree,
-              resolutionMeter: resolutions.resolutionMeter,
+              resolutionDegree: resolutionDegree,
+              resolutionMeter: resolutionMeter,
               sourceResolutionMeter: +row.Resolution,
               horizontalAccuracyCE90: +row.Ep90,
               sensors: row.SensorType.split(",").map((sensor) => sensor.trim()),
