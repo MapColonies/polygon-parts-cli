@@ -39,7 +39,7 @@ npm i
 
 ## Input Flags
 
-| flag | value                           |
+| flag | usage                           |
 | ---- | ------------------------------- |
 | -s   | polygonPartsManager service url |
 | -i   | csv file name                   |
@@ -47,6 +47,7 @@ npm i
 | -c   | catalogId                       |
 | -v   | productVersion                  |
 | -t   | productType                     |
+| --calc_res | calculate Approximate Resolution | 
 
 **Note** productType must be one of: 'Orthophoto',
 'OrthophotoHistory',
@@ -65,6 +66,7 @@ Run the following command when running locally:
 ```
 npm run start -- -s polygonPartsServiceUrl-i path/to/data.csv -p productID -c catalogId -v productVersion -t productType
 ```
+add --calc_res is we want the resolutions to be calculated from the sourceResolution. it is set to false by default
 
 Run the following command when running the docker locally :
 
