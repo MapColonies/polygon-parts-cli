@@ -2,7 +2,7 @@
   "partsFilePath": "../sample_data/example3.csv",
   "idsFilePath": "../sample_data/ids.csv",
   "calculateResolution": false,
-  "rasterCatalogManagerUrl": "https://raster-core-dev-raster-catalog-manager-route-raster-dev.apps.j1lk3njp.eastus.aroapp.io",
-  "geoserverApiUrl": "https://raster-ingestion-dev-geoserver-api-route-raster-dev.apps.j1lk3njp.eastus.aroapp.io",
-  "polygonPartsManagerUrl": "https://polygon-parts-manager-manual-raster-dev.apps.j1lk3njp.eastus.aroapp.io"
+  "rasterCatalogManagerUrl": "https://raster-core-dev-raster-catalog-url",
+  "geoserverApiUrl": "https://raster-ingestion-dev-geoserver-api-url",
+  "polygonPartsManagerUrl": "https://polygon-parts-manager-url"
 }
