@@ -1,4 +1,5 @@
 import type {
+  IRasterCatalogUpsertRequestBody,
   PolygonPartsPayload as PolygonPartsPayloadType,
   ProductType as ProductTypeEnum,
 } from "@map-colonies/mc-model-types";
@@ -35,3 +36,9 @@ export interface CSVRow {
   UpdateDate: string;
   WKT: string;
 }
+
+export interface CatalogIdRow {
+  catalogId: string;
+}
+
+export type LayerInfo = Required<IRasterCatalogUpsertRequestBody>;

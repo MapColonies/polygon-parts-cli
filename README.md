@@ -1,15 +1,19 @@
 # polygon-parts-cli
 
-This basic CLI inserts CSV data into PolygonParts DB using polygonPartsManger service
+This basic CLI inserts CSV data into PolygonParts DB using polygonPartsManger service and published a FeatureType to geoserver
 
 ## Prerequisites
 
 1. Node.js
-2. Suitable CSV data file as will be explained on next section
-3. Deployed polygonPartsManager
-   UpdateDate,SensorType,Resolution,Ep90,Dsc,Countries,ResolutionDegree,ResolutionMeter,Cities
+2. Suitable CSV data file as will be explained on next section - for single layer insertion with multiple parts
 
-## CSV structure
+   **OR**
+
+   Csv with a list of catalgIds for insertion on layers with single part.
+
+3. Deployed polygonPartsManager, GeoserverApi,Geoserver, RasterCatalogManager
+
+## Parts CSV structure
 
 This csv is made manually by out PM.
 This fields were defined by the `Sinergia System` to enable easy one time insert of already ingested layers.
@@ -29,6 +33,12 @@ This fields were defined by the `Sinergia System` to enable easy one time insert
 |      Cities      |          list of cities           |     -     |                 cities                 |
 |       Dsc        |            description            |     -     |              description               |
 
+## Layer Ids CSV structure
+
+|   Field   |     What is it      | Mandatory |     |
+| :-------: | :-----------------: | :-------: | :-: |
+| catalogId | The layer unique Id |     +     |
+
 ## Installation
 
 Run the following command:
@@ -39,39 +49,56 @@ npm i
 
 ## Input Flags
 
-| flag | usage                           |
-| ---- | ------------------------------- |
-| -s   | polygonPartsManager service url |
-| -i   | csv file name                   |
-| -p   | productId                       |
-| -c   | catalogId                       |
-| -v   | productVersion                  |
-| -t   | productType                     |
-| --calc_res | calculate Approximate Resolution | 
+| flag    | usage                                       | type    |
+| ------- | ------------------------------------------- | ------- |
+| -single | run insert on singlePart layers             | boolean |
+| -multi  | run insert on one layer with multiple parts | boolean |
+| -cId    | productId                                   | string  |
 
-**Note** productType must be one of: 'Orthophoto',
-'OrthophotoHistory',
-'OrthophotoBest',
-'RasterMap',
-'RasterMapBest',
-'RasterAid',
-'RasterAidBest',
-'RasterVector',
-'RasterVectorBest',
+**Note**
+
+when using both single/multi flag, remember to mount the file to the sample_data folder
+
+## Config
+
+Add and mount config file
+
+```
+{
+  "partsFilePath": "../sample_data/example3.csv",
+  "idsFilePath": "../sample_data/ids.csv",
+  "calculateResolution": false,
+  "rasterCatalogManagerUrl": "https://raster-catalog-manager-url",
+  "geoserverApiUrl": "https://geoserver-api-url",
+  "polygonPartsManagerUrl": "https://polygon-parts-manager-url"
+}
+
+```
+
+calculateResolution - when doing multi insertion, wither to take resolutions from the csv or to calculate them from the source resolution
 
 ## Usage
 
 Run the following command when running locally:
 
 ```
-npm run start -- -s polygonPartsServiceUrl-i path/to/data.csv -p productID -c catalogId -v productVersion -t productType
+npm run start -- --multi true --cId 1a50a7f7-1d97-4299-bd32-6883484193cd
 ```
-add --calc_res is we want the resolutions to be calculated from the sourceResolution. it is set to false by default
+
+```
+npm run start -- --single
+```
 
 Run the following command when running the docker locally :
 
---network=host is used when reffering to a polygonPartManager service that runs locally.
+--network=host is used when referring to a service that runs locally.
 
 ```
-docker run --network=host --rm -v /path/to/csv/file/locally:/usr/src/app/sample_data docker_image:docker_tag -s=http://localhost:8081 -i ./sample_data/israel.csv -p some_product_id -c some_catalog_id -v version -t product_type
+docker run -it -v ./config/config.json:/usr/src/config/config.json -v ./sample_data/ids.csv:/usr/src/sample_data/ids.csv  pp-cli:v2.0.1 --single
+
+```
+
+```
+docker run -it -v ./config/config.json:/usr/src/config/config.json -v ./sample_data/example3.csv:/usr/src/sample_data/example3.csv  pp-cli:v2.0.1 --multi true --cId c52fe0f1-3f00-4088-a22b-debeee7866b5
+
 ```
