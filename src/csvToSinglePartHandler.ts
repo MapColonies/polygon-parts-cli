@@ -1,14 +1,11 @@
 import fs from "fs";
 import csvParser from "csv-parser";
 import { LayerMetadata, PolygonPart } from "@map-colonies/mc-model-types";
-import {
-  CatalogIdRow,
-  PolygonPartsPayload,
-  ProductType,
-} from "./interfaces";
+import { CatalogIdRow, PolygonPartsPayload, ProductType } from "./interfaces";
 import { RasterCatalogManagerClient } from "./rasterCatalogClient";
 import { GeoserverApiClient } from "./geoserverApiClient";
 import { PolygonPartsManagerClient } from "./polygonPartsClient";
+import { MultiPolygon } from "geojson";
 
 type ZoomLevelResult = { resolutionDegree: number; resolutionMeter: number };
 
@@ -77,29 +74,74 @@ export class CSVToSinglePartHandler {
     metadata: LayerMetadata,
     catalogId: string,
   ): PolygonPartsPayload {
-    const request: PolygonPartsPayload = {
-      catalogId,
-      productId: metadata.productId as string,
-      productType: metadata.productType as ProductType,
-      productVersion: metadata.productVersion as string,
-      partsData: [
-        {
-          sourceId: metadata.productId,
-          sourceName: metadata.productId,
-          resolutionDegree: metadata.maxResolutionDeg,
-          resolutionMeter: metadata.maxResolutionMeter,
-          sourceResolutionMeter: metadata.maxResolutionMeter,
-          horizontalAccuracyCE90: metadata.maxHorizontalAccuracyCE90,
-          sensors: metadata.sensors as string[],
-          imagingTimeBeginUTC: metadata.imagingTimeBeginUTC,
-          imagingTimeEndUTC: metadata.imagingTimeEndUTC,
-          footprint: metadata.footprint,
-          description: metadata.description,
-          countries: metadata.region,
-        },
-      ] as PolygonPart[],
-    };
+    let request: PolygonPartsPayload;
+    if (metadata.footprint?.type === "Polygon") {
+      request = {
+        catalogId,
+        productId: metadata.productId as string,
+        productType: metadata.productType as ProductType,
+        productVersion: metadata.productVersion as string,
+        partsData: [
+          {
+            sourceId: metadata.productId,
+            sourceName: metadata.productId,
+            resolutionDegree: metadata.maxResolutionDeg,
+            resolutionMeter: metadata.maxResolutionMeter,
+            sourceResolutionMeter: metadata.maxResolutionMeter,
+            horizontalAccuracyCE90: metadata.maxHorizontalAccuracyCE90,
+            sensors: metadata.sensors as string[],
+            imagingTimeBeginUTC: metadata.imagingTimeBeginUTC,
+            imagingTimeEndUTC: metadata.imagingTimeEndUTC,
+            footprint: metadata.footprint,
+            description: metadata.description,
+            countries: metadata.region,
+          },
+        ] as PolygonPart[],
+      };
+    } else if (metadata.footprint?.type === "MultiPolygon") {
+      request = {
+        catalogId,
+        productId: metadata.productId as string,
+        productType: metadata.productType as ProductType,
+        productVersion: metadata.productVersion as string,
+        partsData: this.createPartsData(metadata),
+      };
+    } else {
+      throw new Error(
+        `Layer with id : ${catalogId} is neither a Polygon nor a MultiPolygon.`,
+      );
+    }
+
     return request;
+  }
+
+  private createPartsData(metadata: LayerMetadata): PolygonPart[] {
+    const multiPolygon = metadata.footprint as MultiPolygon;
+    const partsData: PolygonPart[] = [];
+
+    multiPolygon.coordinates.forEach((coordinates) => {
+      const part = {
+        sourceId: metadata.productId,
+        sourceName: metadata.productId,
+        resolutionDegree: metadata.maxResolutionDeg,
+        resolutionMeter: metadata.maxResolutionMeter,
+        sourceResolutionMeter: metadata.maxResolutionMeter,
+        horizontalAccuracyCE90: metadata.maxHorizontalAccuracyCE90,
+        sensors: metadata.sensors as string[],
+        imagingTimeBeginUTC: metadata.imagingTimeBeginUTC,
+        imagingTimeEndUTC: metadata.imagingTimeEndUTC,
+        footprint: {
+          type: "Polygon",
+          coordinates,
+        },
+        description: metadata.description,
+        countries: metadata.region,
+      } as unknown as PolygonPart;
+
+      partsData.push(part);
+    });
+
+    return partsData;
   }
 
   private async parseCSV(): Promise<string[]> {
