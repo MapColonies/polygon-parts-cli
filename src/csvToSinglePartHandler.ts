@@ -7,8 +7,6 @@ import { GeoserverApiClient } from "./geoserverApiClient";
 import { PolygonPartsManagerClient } from "./polygonPartsClient";
 import { MultiPolygon } from "geojson";
 
-type ZoomLevelResult = { resolutionDegree: number; resolutionMeter: number };
-
 export class CSVToSinglePartHandler {
   private readonly filePath: string;
   private rasterCatalogManagerClient: RasterCatalogManagerClient;
