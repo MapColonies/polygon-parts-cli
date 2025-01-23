@@ -93,12 +93,14 @@ Run the following command when running the docker locally :
 
 --network=host is used when referring to a service that runs locally.
 
+NODE_TLS_REJECT_UNAUTHORIZED=0 is used to reach services in openshift without certificates 
+
 ```
-docker run -it -v ./config/config.json:/usr/src/config/config.json -v ./sample_data/ids.csv:/usr/src/sample_data/ids.csv  pp-cli:v2.0.1 --single
+docker run -it -e NODE_TLS_REJECT_UNAUTHORIZED=0 -v ./config/config.json:/usr/src/config/config.json -v ./sample_data/ids.csv:/usr/src/sample_data/ids.csv  pp-cli:v2.0.1 --single
 
 ```
 
 ```
-docker run -it -v ./config/config.json:/usr/src/config/config.json -v ./sample_data/example3.csv:/usr/src/sample_data/example3.csv  pp-cli:v2.0.1 --multi true --cId c52fe0f1-3f00-4088-a22b-debeee7866b5
+docker run -it -e NODE_TLS_REJECT_UNAUTHORIZED=0 -v ./config/config.json:/usr/src/config/config.json -v ./sample_data/example3.csv:/usr/src/sample_data/example3.csv  pp-cli:v2.0.1 --multi true --cId c52fe0f1-3f00-4088-a22b-debeee7866b5
 
 ```
