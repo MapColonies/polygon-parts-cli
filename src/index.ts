@@ -44,6 +44,7 @@ console.log(argv);
       rasterCatalogManagerUrl,
       geoserverApiUrl,
       polygonPartsManagerUrl,
+      wfsLink
     } = config;
     if (argv.single) {
       console.log("Generating inserts on single parts layers");
@@ -52,6 +53,7 @@ console.log(argv);
         rasterCatalogManagerUrl,
         geoserverApiUrl,
         polygonPartsManagerUrl,
+        wfsLink
       );
       await singlePartHandler.generateSinglePartInsertions();
       console.log("Done successfully");
@@ -67,6 +69,7 @@ console.log(argv);
         rasterCatalogManagerUrl,
         geoserverApiUrl,
         polygonPartsManagerUrl,
+        wfsLink
       );
       await multiplePartsHandler.generateMultiPartsInsertion();
       console.log("Done successfully");
