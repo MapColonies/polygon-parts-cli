@@ -1,0 +1,9 @@
+{
+  "partsFilePath": "../sample_data/example3.csv",
+  "idsFilePath": "../sample_data/ids.csv",
+  "calculateResolution": false,
+  "rasterCatalogManagerUrl": "https://raster-catalog-manager-url",
+  "geoserverApiUrl": "https://raster-geoserver-api-url",
+  "polygonPartsManagerUrl": "https://polygon-parts-manager-url",
+  "wfsLink": "https://polygon-parts-dev/api/raster/v1/wfs?request=GetCapabilities"
+}

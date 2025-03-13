@@ -8,12 +8,17 @@ export class PolygonPartsManagerClient {
   }
 
   public async insert(payload: PolygonPartsPayload): Promise<void> {
-    axios
-      .post(`${this.polygonPartsManagerServiceUrl}/polygonParts`, {
+    try {
+      await axios.post(`${this.polygonPartsManagerServiceUrl}/polygonParts`, {
         ...payload,
-      })
-      .catch((error) => {
-        console.log(error);
       });
+      console.log(`finished pp insert on ${payload.catalogId}`);
+    } catch (e) {
+      if ((e as any).status === 504) {
+        await new Promise((resolve) => setTimeout(resolve, 120000));
+        return;
+      }
+      throw e;
+    }
   }
 }

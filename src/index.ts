@@ -1,48 +1,28 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { PolygonPartsManagerClient } from "./polygonPartsClient";
-import { CSVToRequest } from "./csvToRequest";
+import { promises as fs } from "fs";
+import { CSVToMultiplePartsHandler } from "./csvToMultiPartsHandler";
+import { CSVToSinglePartHandler } from "./csvToSinglePartHandler";
+import path from "path";
 
 const argv = yargs(hideBin(process.argv))
   .usage("insert request to polygon parts service")
-  .option("s", {
-    alias: "polygon_parts_service",
-    describe: "polygon_parts_service",
-    type: "string",
-  })
-  .option("i", {
-    alias: "input",
-    describe: "input file (csv)",
-    type: "string",
-  })
-  .option("p", {
-    alias: "product_id",
-    describe: "product_id",
-    type: "string",
-  })
-  .option("c", {
-    //uuid
-    alias: "catalog_id",
-    describe: "catalog_id",
-    type: "string",
-  })
-  .option("t", {
-    // add closed options list
-    alias: "product_type",
-    describe: "product_type",
-    type: "string",
-  })
-  .option("v", {
-    alias: "product_version",
-    describe: "product version",
-    type: "string",
-  })
-  .option("calc_res", {
-    alias: "calculate_resolution",
-    describe: "calculate resolution from source",
+  .option("single", {
+    alias: "single",
+    describe: "insert a list of singlePart layers",
     type: "boolean",
-    default: false,
   })
+  .option("multi", {
+    alias: "multi",
+    describe: "insert a singleLayer with multipleParts",
+    type: "boolean",
+  })
+  .option("cId", {
+    alias: "catalogId",
+    describe: "layer catalogId for a single insert with multiple parts",
+    type: "string",
+  })
+  .conflicts("single", ["multi", "cId"]) // Prevents using --single with --multi or --cId
   .help(true)
   .parseSync();
 
@@ -51,30 +31,50 @@ console.log(argv);
 // Example usage
 (async () => {
   try {
-    if (argv.i && argv.p && argv.c && argv.t && argv.v && argv.s) {
-      const filePath = argv.i;
-      const productId = argv.p;
-      const catalogId = argv.c;
-      const productType = argv.t;
-      const productVersion = argv.v;
-      const polygonPartsServiceUrl = argv.s;
-      const calc_res = argv.calc_res;
-      const polygonPartsManager = new PolygonPartsManagerClient(
-        polygonPartsServiceUrl,
+    // Load the config file
+    const configPath = path.resolve(__dirname, "../config/config.json");
+    const configData = await fs.readFile(configPath, "utf-8");
+    const config = JSON.parse(configData);
+
+    // Extract config variables
+    const {
+      partsFilePath,
+      idsFilePath,
+      calculateResolution,
+      rasterCatalogManagerUrl,
+      geoserverApiUrl,
+      polygonPartsManagerUrl,
+      wfsLink
+    } = config;
+    if (argv.single) {
+      console.log("Generating inserts on single parts layers");
+      const singlePartHandler = new CSVToSinglePartHandler(
+        idsFilePath,
+        rasterCatalogManagerUrl,
+        geoserverApiUrl,
+        polygonPartsManagerUrl,
+        wfsLink
       );
-      const CSVToRequestParser = new CSVToRequest(
-        filePath,
+      await singlePartHandler.generateSinglePartInsertions();
+      console.log("Done successfully");
+    } else if (argv.multi && argv.cId) {
+      const catalogId = argv.cId;
+      console.log(
+        `Generating insert on layer: ${catalogId} with calcRes set to: ${calculateResolution}`,
+      );
+      const multiplePartsHandler = new CSVToMultiplePartsHandler(
+        partsFilePath,
         catalogId,
-        productId,
-        productType,
-        productVersion,
-        calc_res,
+        calculateResolution,
+        rasterCatalogManagerUrl,
+        geoserverApiUrl,
+        polygonPartsManagerUrl,
+        wfsLink
       );
-      const request = await CSVToRequestParser.createRequest();
-      await polygonPartsManager.insert(request);
-      ///console.log(JSON.stringify(transformedData, null, 2));
+      await multiplePartsHandler.generateMultiPartsInsertion();
+      console.log("Done successfully");
     }
   } catch (error) {
-    console.error("Error inserting to polygonPartsManager:", error);
+    throw error;
   }
 })();
