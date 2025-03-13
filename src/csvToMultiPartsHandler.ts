@@ -54,7 +54,7 @@ export class CSVToMultiplePartsHandler {
         await this.geoserverApiClient.findFeatureType(layerName);
       //check that layer not it geoserver
       //if layer not in geoserver, build the request and post to polygonPartsManager and then publish the layer
-      if (true) {
+      if (!layerInGeoServer) {
         console.log(
           `starting pp insert and publish of Layer: ${layerName} with catalogId: ${this.catalogId}`,
         );
