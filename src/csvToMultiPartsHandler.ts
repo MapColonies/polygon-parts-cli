@@ -17,7 +17,6 @@ type ZoomLevelResult = { resolutionDegree: number; resolutionMeter: number };
 export class CSVToMultiplePartsHandler {
   private readonly filePath: string;
   private readonly catalogId: string;
-  private readonly calcRes: boolean;
   private rasterCatalogManagerClient: RasterCatalogManagerClient;
   private geoserverApiClient: GeoserverApiClient;
   private polygonPartsManagerClient: PolygonPartsManagerClient;
@@ -25,17 +24,16 @@ export class CSVToMultiplePartsHandler {
   public constructor(
     filePath: string,
     catalogId: string,
-    calcRes: boolean,
     rasterCatalogUrl: string,
     geoserverApiUrl: string,
     polygonPartsManagerUrl: string,
-    wfsLink: string
+    wfsLink: string,
   ) {
     this.filePath = filePath;
     this.catalogId = catalogId;
-    this.calcRes = calcRes;
     this.rasterCatalogManagerClient = new RasterCatalogManagerClient(
-      rasterCatalogUrl,wfsLink
+      rasterCatalogUrl,
+      wfsLink,
     );
     this.geoserverApiClient = new GeoserverApiClient(geoserverApiUrl);
     this.polygonPartsManagerClient = new PolygonPartsManagerClient(
@@ -56,7 +54,7 @@ export class CSVToMultiplePartsHandler {
         await this.geoserverApiClient.findFeatureType(layerName);
       //check that layer not it geoserver
       //if layer not in geoserver, build the request and post to polygonPartsManager and then publish the layer
-      if (!layerInGeoServer) {
+      if (true) {
         console.log(
           `starting pp insert and publish of Layer: ${layerName} with catalogId: ${this.catalogId}`,
         );
@@ -71,7 +69,10 @@ export class CSVToMultiplePartsHandler {
         await this.polygonPartsManagerClient.insert(request);
         const tableName = `${productId?.toLowerCase()}_${productType?.toLowerCase()}`;
         await this.geoserverApiClient.postFeatureType(layerName, tableName);
-        await this.rasterCatalogManagerClient.updateLinks(layerDetails, this.catalogId);
+        await this.rasterCatalogManagerClient.updateLinks(
+          layerDetails,
+          this.catalogId,
+        );
         console.log(
           `finished successfully pp insert and publish of Layer: ${layerName} with catalogId: ${this.catalogId}`,
         );
@@ -100,16 +101,16 @@ export class CSVToMultiplePartsHandler {
             let resolutionDegree: number;
             let resolutionMeter: number;
 
-            if (this.calcRes) {
-              const resolutions = this.findZoomLevelAndResolution(
-                +row.Resolution,
-              );
-              resolutionDegree = resolutions.resolutionDegree;
-              resolutionMeter = resolutions.resolutionMeter;
-            } else {
-              resolutionDegree = +row.ResolutionDegree;
-              resolutionMeter = +row.ResolutionMeter;
-            }
+            const resolutionValue =
+              row.PublishRes !== null && row.PublishRes !== ""
+                ? Number(row.PublishRes)
+                : Number(row.Resolution);
+            const resolutions =
+              this.findZoomLevelAndResolution(resolutionValue);
+
+            resolutionDegree = resolutions.resolutionDegree;
+            resolutionMeter = resolutions.resolutionMeter;
+
             results.push({
               sourceId: row.Source,
               sourceName: row.SourceName,
@@ -125,7 +126,11 @@ export class CSVToMultiplePartsHandler {
               countries: row.Countries.split(",").map((country) =>
                 country.trim(),
               ),
-              cities: row.Cities.split(",").map((city) => city.trim()),
+              cities: row.Cities
+                ? row.Cities.split(",")
+                    .map((city) => city.trim())
+                    .filter(Boolean)
+                : undefined,
             });
           } catch (error) {
             const err = error as Error;

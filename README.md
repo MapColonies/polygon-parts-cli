@@ -18,20 +18,19 @@ This basic CLI inserts CSV data into PolygonParts DB using polygonPartsManger se
 This csv is made manually by out PM.
 This fields were defined by the `Sinergia System` to enable easy one time insert of already ingested layers.
 
-|      Field       |            What is it             | Mandatory |       polygonParts Field Mapping       |
-| :--------------: | :-------------------------------: | :-------: | :------------------------------------: |
-|      Source      |        The sourceId value         |     +     |                sourceId                |
-|    SourceName    |            source name            |     +     |               sourceName               |
-|       WKT        | WKT of the layer. must be POLYGON |     +     |               footprint                |
-|    UpdateDate    |    Date. In format DD/MM/YYYY     |     +     | imagingTimeBeginUTC, imagingTimeEndUTC |
-|    SensorType    |          list of sensors          |     +     |                 OTHER                  |
-|    Resolution    |         source resolution         |     +     |         sourceResolutionMeter          |
-|       Ep90       |     part horizontal accuracy      |     +     |         horizontalAccuracyCE90         |
-|    Countries     |         list of countries         |     +     |               countries                |
-| ResolutionDegree |         used for min also         |     +     |            resolutionDegree            |
-| ResolutionMeter  |        list of sensor name        |     +     |            resolutionMeter             |
-|      Cities      |          list of cities           |     -     |                 cities                 |
-|       Dsc        |            description            |     -     |              description               |
+|   Field    |                                                 What is it                                                 | Mandatory |       polygonParts Field Mapping       |
+| :--------: | :--------------------------------------------------------------------------------------------------------: | :-------: | :------------------------------------: |
+|   Source   |                                             The sourceId value                                             |     +     |                sourceId                |
+| SourceName |                                                source name                                                 |     +     |               sourceName               |
+|    WKT     |                                     WKT of the layer. must be POLYGON                                      |     +     |               footprint                |
+| UpdateDate |                                         Date. In format DD/MM/YYYY                                         |     +     | imagingTimeBeginUTC, imagingTimeEndUTC |
+| SensorType |                                              list of sensors                                               |     +     |                 OTHER                  |
+| Resolution |                                             source resolution                                              |     +     |         sourceResolutionMeter          |
+|    Ep90    |                                          part horizontal accuracy                                          |     +     |         horizontalAccuracyCE90         |
+| Countries  |                                             list of countries                                              |     +     |               countries                |
+| PublishRes | used for calculation of res in meter and degree- if not existent, will be calculated from resolution field |     -     |      actual published resolution       |
+|   Cities   |                                               list of cities                                               |     -     |                 cities                 |
+|    Dsc     |                                                description                                                 |     -     |              description               |
 
 ## Layer Ids CSV structure
 
@@ -63,19 +62,16 @@ when using both single/multi flag, remember to mount the file to the sample_data
 
 Add and mount config file
 
-```
+```json
 {
   "partsFilePath": "../sample_data/example3.csv",
   "idsFilePath": "../sample_data/ids.csv",
-  "calculateResolution": false,
   "rasterCatalogManagerUrl": "https://raster-catalog-manager-url",
   "geoserverApiUrl": "https://geoserver-api-url",
-  "polygonPartsManagerUrl": "https://polygon-parts-manager-url"
+  "polygonPartsManagerUrl": "https://polygon-parts-manager-url",
+  "wfsLink": "https://polygon-parts-dev.mapcolonies.net/api/raster/v1/wfs?request=GetCapabilities"
 }
-
 ```
-
-calculateResolution - when doing multi insertion, wither to take resolutions from the csv or to calculate them from the source resolution
 
 ## Usage
 
@@ -93,7 +89,7 @@ Run the following command when running the docker locally :
 
 --network=host is used when referring to a service that runs locally.
 
-NODE_TLS_REJECT_UNAUTHORIZED=0 is used to reach services in openshift without certificates 
+NODE_TLS_REJECT_UNAUTHORIZED=0 is used to reach services in openshift without certificates
 
 ```
 docker run -it -e NODE_TLS_REJECT_UNAUTHORIZED=0 -v ./config/config.json:/usr/src/config/config.json -v ./sample_data/ids.csv:/usr/src/sample_data/ids.csv  pp-cli:v2.0.1 --single

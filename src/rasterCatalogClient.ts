@@ -5,10 +5,10 @@ import { LayerMetadata, Link } from "@map-colonies/mc-model-types";
 
 export class RasterCatalogManagerClient {
   private readonly rasterCatalogClientUrl: string;
-  private readonly wfsLink: string
+  private readonly wfsLink: string;
   public constructor(serviceUrl: string, wfsLink: string) {
     this.rasterCatalogClientUrl = serviceUrl;
-    this.wfsLink= wfsLink;
+    this.wfsLink = wfsLink;
   }
 
   public async getLayer(productId: string): Promise<LayerInfo> {
@@ -30,18 +30,24 @@ export class RasterCatalogManagerClient {
     }
   }
 
-  public async updateLinks(layerInfo: LayerInfo, catalogId:string): Promise<void>{
-    try{
+  public async updateLinks(
+    layerInfo: LayerInfo,
+    catalogId: string,
+  ): Promise<void> {
+    try {
       const links = layerInfo.links;
-      const avi : Link= { 
-          name: `${layerInfo.metadata.productId}-${layerInfo.metadata.productType}`,
-          protocol:"WFS",
-          url:this.wfsLink};
+      const avi: Link = {
+        name: `${layerInfo.metadata.productId}-${layerInfo.metadata.productType}`,
+        protocol: "WFS",
+        url: this.wfsLink,
+      };
       links.push(avi);
-      await axios.put(`${this.rasterCatalogClientUrl}/records/${catalogId}`, {metadata: {},links});
+      await axios.put(`${this.rasterCatalogClientUrl}/records/${catalogId}`, {
+        metadata: {},
+        links,
+      });
       console.log(`Links updated for catalogId: ${catalogId}`);
-
-    }catch(error){
+    } catch (error) {
       throw error;
     }
   }
