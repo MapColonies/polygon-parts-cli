@@ -27,14 +27,15 @@ export interface CSVRow {
   SourceName: string;
   SensorType: string;
   Resolution: string;
-  ResolutionMeter: string;
-  ResolutionDegree: string;
+  ResolutionMeter?: string;
+  ResolutionDegree?: string;
   Ep90: string;
   Cities: string;
   Countries: string;
   Dsc: string;
   UpdateDate: string;
   WKT: string;
+  PublishRes?: string;
 }
 
 export interface CatalogIdRow {
