@@ -27,7 +27,7 @@ This fields were defined by the `Sinergia System` to enable easy one time insert
 | SensorType |                                              list of sensors                                               |     +     |                 OTHER                  |
 | Resolution |                                             source resolution                                              |     +     |         sourceResolutionMeter          |
 |    Ep90    |                                          part horizontal accuracy                                          |     +     |         horizontalAccuracyCE90         |
-| Countries  |                                             list of countries                                              |     +     |               countries                |
+| Countries  |                                             list of countries                                              |     -     |               countries                |
 | PublishRes | used for calculation of res in meter and degree- if not existent, will be calculated from resolution field |     -     |      actual published resolution       |
 |   Cities   |                                               list of cities                                               |     -     |                 cities                 |
 |    Dsc     |                                                description                                                 |     -     |              description               |

@@ -123,9 +123,11 @@ export class CSVToMultiplePartsHandler {
               imagingTimeEndUTC: new Date(row.UpdateDate),
               footprint: wkx.Geometry.parse(row.WKT).toGeoJSON() as Polygon,
               description: row.Dsc,
-              countries: row.Countries.split(",").map((country) =>
-                country.trim(),
-              ),
+              countries: row.Countries
+              ? row.Countries.split(",")
+                  .map((country) => country.trim())
+                  .filter(Boolean)
+              : undefined,
               cities: row.Cities
                 ? row.Cities.split(",")
                     .map((city) => city.trim())
@@ -168,11 +170,6 @@ export class CSVToMultiplePartsHandler {
     if (!row.Resolution || isNaN(+row.Resolution)) {
       throw new Error("Invalid Resolution. Must be a number.");
     }
-
-    if (!row.Countries || row.Countries.trim() === "") {
-      throw new Error("Countries field is required.");
-    }
-
     if (!row.SensorType || row.SensorType.trim() === "") {
       throw new Error("SensorType field is required.");
     }
