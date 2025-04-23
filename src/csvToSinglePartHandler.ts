@@ -18,11 +18,12 @@ export class CSVToSinglePartHandler {
     rasterCatalogUrl: string,
     geoserverApiUrl: string,
     polygonPartsManagerUrl: string,
-    wfsLink: string
+    wfsLink: string,
   ) {
     this.filePath = filePath;
     this.rasterCatalogManagerClient = new RasterCatalogManagerClient(
-      rasterCatalogUrl,wfsLink
+      rasterCatalogUrl,
+      wfsLink,
     );
     this.geoserverApiClient = new GeoserverApiClient(geoserverApiUrl);
     this.polygonPartsManagerClient = new PolygonPartsManagerClient(
@@ -51,7 +52,10 @@ export class CSVToSinglePartHandler {
           await this.polygonPartsManagerClient.insert(request);
           const tableName = `${productId?.toLowerCase()}_${productType?.toLowerCase()}`;
           await this.geoserverApiClient.postFeatureType(layerName, tableName);
-          await this.rasterCatalogManagerClient.updateLinks(layerDetails, catalogId);
+          await this.rasterCatalogManagerClient.updateLinks(
+            layerDetails,
+            catalogId,
+          );
           console.log(
             `finished successfully pp insert and publish of Layer: ${layerName} with catalogId: ${catalogId}`,
           );
